@@ -1,0 +1,72 @@
+// Local development database schema for AI Office Toolbox V1.1.
+// The current V1.0 MVP frontend still uses localStorage. This schema is only
+// for the production-ready backend path that will be wired in later.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  quota        UserQuota?
+  usageRecords UsageRecord[]
+  orders       Order[]
+
+  @@map("users")
+}
+
+model UserQuota {
+  id             String   @id @default(cuid())
+  userId         String   @unique @map("user_id")
+  totalQuota     Int      @default(0) @map("total_quota")
+  usedQuota      Int      @default(0) @map("used_quota")
+  remainingQuota Int      @default(0) @map("remaining_quota")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_quotas")
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  toolId    String   @map("tool_id")
+  toolName  String   @map("tool_name")
+  inputType String   @map("input_type")
+  status    String
+  quotaUsed Int      @map("quota_used")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([toolId])
+  @@map("usage_records")
+}
+
+model Order {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  planName         String    @map("plan_name")
+  amount           Decimal
+  quotaAmount      Int       @map("quota_amount")
+  paymentProvider  String    @map("payment_provider")
+  paymentStatus    String    @default("pending") @map("payment_status")
+  paymentTradeNo   String?   @map("payment_trade_no")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  paidAt           DateTime? @map("paid_at")
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([paymentStatus])
+  @@index([paymentTradeNo])
+  @@map("orders")
+}
