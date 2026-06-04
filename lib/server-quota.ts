@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 // webhooks, never from frontend state.
 
 const DEFAULT_FREE_QUOTA = 5;
+const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
 
 export type ServerQuota = {
   userId: string;
@@ -80,7 +81,7 @@ export async function canUseToolServer(userId: string | null): Promise<ServerToo
     return {
       canUse: false,
       reason: "quota_empty",
-      message: "免费额度已用完，请升级套餐或联系定制",
+      message: QUOTA_EMPTY_MESSAGE,
       quota
     };
   }

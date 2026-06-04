@@ -59,8 +59,8 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
       } else {
         registerUser(values.account, values.password, values.confirmPassword);
       }
-      setSuccessMessage(isLogin ? "登录成功，正在进入用户中心。" : "注册成功，正在进入用户中心。");
-      router.push("/dashboard");
+      setSuccessMessage(isLogin ? "登录成功，正在返回首页。" : "注册成功，正在进入用户中心。");
+      router.push(isLogin ? "/" : "/dashboard");
     } catch (error) {
       setErrors({
         form: error instanceof Error ? error.message : "操作失败，请稍后重试。"

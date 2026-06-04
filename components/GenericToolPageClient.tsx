@@ -9,11 +9,14 @@ import {
   Download,
   FileText,
   Loader2,
+  Mail,
+  MessageCircle,
   RefreshCcw,
   Sparkles,
   UploadCloud,
   X
 } from "lucide-react";
+import { AUTHOR_DOUYIN_ID, CONTACT_MAILTO, isQuotaEmptyMessage, QUOTA_EMPTY_MESSAGE } from "@/lib/contact-info";
 import { canUseTool, consumeQuotaAfterSuccess } from "@/lib/user-store";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -90,15 +93,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     sizeLimit: "建议 20MB 以内，暂不支持扫描件 OCR",
     submitLabel: "开始总结",
     emptyText: "PDF 总结结果会显示在这里",
-    fields: [
-      {
-        name: "summary_depth",
-        label: "总结深度",
-        type: "select",
-        options: ["标准", "简洁", "详细"],
-        defaultValue: "标准"
-      }
-    ],
+    fields: [],
     sample: "## PDF 总结示例\n\n### 核心摘要\n文档主要围绕项目背景、执行计划和潜在风险展开。\n\n### 重点内容\n- 项目目标清晰，但资源排期需要进一步确认。\n- 风险集中在交付时间和跨部门协作。\n\n### 建议\n优先明确负责人、时间节点和验收标准。"
   },
   contract: {
@@ -146,15 +141,15 @@ const toolConfigs: Record<string, ToolConfig> = {
         name: "report_type",
         label: "报告类型",
         type: "select",
-        options: ["周报", "日报", "月报"],
+        options: ["日报", "周报", "月报", "项目汇报"],
         defaultValue: "周报"
       },
       {
-        name: "tone",
-        label: "语气",
+        name: "report_style",
+        label: "报告风格",
         type: "select",
-        options: ["正式", "简洁", "商务"],
-        defaultValue: "正式"
+        options: ["正式汇报", "简洁版", "详细版", "领导汇报", "数据型"],
+        defaultValue: "正式汇报"
       }
     ],
     sample: "## 周报示例\n\n### 本周完成\n- 完成客户资料整理与重点客户跟进。\n- 梳理销售数据并输出异常情况说明。\n\n### 遇到问题\n- 部分数据口径不一致，需要进一步确认。\n\n### 下周计划\n- 完成数据复盘并推进重点客户转化。"
@@ -189,8 +184,8 @@ const toolConfigs: Record<string, ToolConfig> = {
         name: "style",
         label: "风格",
         type: "select",
-        options: ["商务", "正式", "教学", "路演"],
-        defaultValue: "商务"
+        options: ["商务汇报", "科技风", "极简风", "教育培训", "产品发布", "营销方案", "学术答辩"],
+        defaultValue: "商务汇报"
       }
     ],
     sample: "## PPT 大纲示例\n\n1. 封面：AI 办公产品商业计划书\n2. 市场背景：办公效率工具需求增长\n3. 用户痛点：重复整理、写作、分析成本高\n4. 产品方案：七类 AI 办公工具\n5. 商业模式：按次、套餐、企业定制\n6. 总结：落地计划与下一步目标"
@@ -244,15 +239,15 @@ const toolConfigs: Record<string, ToolConfig> = {
         name: "communication_type",
         label: "类型",
         type: "select",
-        options: ["邮件", "通知", "公告"],
-        defaultValue: "邮件"
+        options: ["工作邮件", "通知公告", "客户沟通", "催款通知", "会议通知", "请假申请", "合作邀约", "微信回复"],
+        defaultValue: "工作邮件"
       },
       {
         name: "communication_tone",
         label: "语气",
         type: "select",
-        options: ["正式", "友好", "简洁"],
-        defaultValue: "正式"
+        options: ["礼貌专业", "高情商", "简洁直接", "亲切自然", "强硬催促", "商务正式"],
+        defaultValue: "礼貌专业"
       }
     ],
     sample: "## 邮件润色示例\n\n尊敬的同事您好：\n\n关于本周项目进度，请各位于周五 18:00 前完成相关材料提交。如有特殊情况，请提前与项目负责人沟通。\n\n感谢配合。"
@@ -445,14 +440,14 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
                         去登录
                       </Link>
                     ) : null}
-                    {error === "免费额度已用完，请升级套餐或联系定制" ? (
+                    {isQuotaEmptyMessage(error) ? (
                       <>
-                        <Link href="/pricing" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
-                          查看套餐
-                        </Link>
                         <Link href="/contact" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
                           联系定制
                         </Link>
+                        <a href={CONTACT_MAILTO} className="ml-2 font-semibold text-red-800 underline underline-offset-4">
+                          发送邮件
+                        </a>
                       </>
                     ) : null}
                   </span>
@@ -716,21 +711,38 @@ function ActionButton({
 }
 
 function QuotaModal({ onClose }: { onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyDouyinId() {
+    await navigator.clipboard.writeText(AUTHOR_DOUYIN_ID);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
           <Sparkles className="h-5 w-5" />
         </div>
         <h2 className="mt-5 text-xl font-semibold text-slate-950">免费额度已用完</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-600">免费额度已用完，请升级套餐或联系定制。</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/#pricing" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
-            查看套餐
-          </Link>
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+        <p className="mt-3 text-sm leading-7 text-slate-600">{QUOTA_EMPTY_MESSAGE}</p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
             联系定制
           </Link>
+          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            <Mail className="h-4 w-4" />
+            发送邮件
+          </a>
+          <button type="button" onClick={copyDouyinId} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            <Copy className="h-4 w-4" />
+            {copied ? "已复制" : "复制抖音号"}
+          </button>
+        </div>
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+          <MessageCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>请打开抖音搜索：<span className="font-semibold">{AUTHOR_DOUYIN_ID}</span></p>
         </div>
         <button type="button" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50">
           关闭
@@ -774,7 +786,7 @@ function buildRequestBody(tool: ToolConfig, values: Record<string, string>, sele
     if (selectedFile) formData.append("files", selectedFile);
 
     if (tool.id === "pdf") {
-      formData.append("text_input", `总结深度：${values.summary_depth || "标准"}`);
+      formData.append("text_input", values.text_input || "");
     } else if (tool.id === "contract") {
       formData.append("text_input", values.contract_text || "");
     } else if (tool.id === "excel") {
@@ -789,7 +801,7 @@ function buildRequestBody(tool: ToolConfig, values: Record<string, string>, sele
       tool_type: tool.toolType,
       text_input: values.work_content || "",
       report_type: values.report_type || "",
-      report_style: values.tone || ""
+      report_style: values.report_style || ""
     });
   }
 
@@ -823,7 +835,7 @@ function normalizeErrorMessage(message: unknown) {
   const text = typeof message === "string" ? message : "";
 
   if (!text) return "服务暂时繁忙，请稍后重试。";
-  if (text.includes("quota") || text.includes("额度")) return "额度不足，请升级套餐后继续使用。";
+  if (text.includes("quota") || text.includes("额度")) return QUOTA_EMPTY_MESSAGE;
   if (text.includes("OCR") || text.includes("未读取") || text.includes("无法读取") || text.includes("empty")) {
     return "文件内容无法读取，当前版本暂不支持 OCR，请上传可复制文字的文档。";
   }

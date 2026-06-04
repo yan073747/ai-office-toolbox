@@ -1,10 +1,13 @@
 "use client";
 
+import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
 import {
   ArrowRight,
   Building2,
   CheckCircle2,
+  Clipboard,
   Clock3,
+  Copy,
   FileUp,
   Mail,
   MessageSquareText,
@@ -15,37 +18,36 @@ import {
   X
 } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 
 const industries = ["电商", "外贸", "教育", "企业办公", "自媒体", "其他"];
-const budgets = ["500元以下", "500-1000元", "1000-3000元", "3000元以上"];
+const budgets = ["500 元以内", "500-1000 元", "1000-3000 元", "3000 元以上"];
 
 const capabilities = [
-  "AI 工作流搭建",
-  "AI 办公工具定制",
-  "文档自动总结",
-  "表格自动分析",
-  "企业知识库问答",
-  "自动生成报告"
+  "AI 办公自动化",
+  "AI 表格分析",
+  "AI 文档总结",
+  "AI 合同提取",
+  "AI 电商运营助手",
+  "AI 外贸跟单助手",
+  "AI 自媒体内容助手",
+  "AI 工作流 / 智能体定制"
 ];
 
-const processSteps = ["提交需求", "初步沟通", "确认报价", "开发交付", "测试优化"];
+const processSteps = ["填写需求", "邮箱或抖音沟通", "确认范围", "报价排期", "开发交付"];
 
 const faqs = [
   {
-    question: "定制一个工具大概要多少钱？",
-    answer: "轻量工具通常从几百元起，复杂流程会根据文件类型、流程节点、交付范围和维护需求单独评估。"
+    question: "提交后多久会联系我？",
+    answer: "我会根据需求描述和联系方式尽快回复，建议至少填写手机号、微信号或邮箱中的一项。"
   },
   {
-    question: "多久可以交付？",
-    answer: "简单工具一般 3-7 天可以交付初版，涉及多流程、多文件或企业知识库的项目会先确认排期。"
+    question: "可以只定制一个小功能吗？",
+    answer: "可以。适合从一个高频重复任务开始，例如表格分析、文档总结、合同提取、内容生成或客户跟进。"
   },
   {
-    question: "可以只做一个小功能吗？",
-    answer: "可以。你可以先从一个高频重复任务开始，例如表格整理、报告生成、文案润色或文档总结。"
-  },
-  {
-    question: "是否支持后期维护？",
-    answer: "支持。可以根据你的使用反馈继续优化提示词、字段、输出格式和业务流程。"
+    question: "提交后还需要单独联系吗？",
+    answer: "不强制。如果需求比较急，也可以通过页面顶部的邮箱或抖音号直接联系我。"
   }
 ];
 
@@ -55,6 +57,7 @@ type FormState = {
   phone: string;
   wechat: string;
   email: string;
+  douyin: string;
   industry: string;
   description: string;
   hasSample: boolean;
@@ -62,6 +65,7 @@ type FormState = {
 };
 
 type FormErrors = Partial<Record<keyof FormState | "contact" | "sampleFile", string>>;
+type CopyTarget = "email" | "douyin" | null;
 
 const initialForm: FormState = {
   name: "",
@@ -69,10 +73,11 @@ const initialForm: FormState = {
   phone: "",
   wechat: "",
   email: "",
+  douyin: "",
   industry: "企业办公",
   description: "",
   hasSample: false,
-  budget: "500-1000元"
+  budget: "500-1000 元"
 };
 
 export default function ContactPageClient() {
@@ -80,20 +85,20 @@ export default function ContactPageClient() {
   const [sampleFile, setSampleFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
+  const [copied, setCopied] = useState<CopyTarget>(null);
 
   const contactProvided = useMemo(() => {
     return Boolean(form.phone.trim() || form.wechat.trim() || form.email.trim());
   }, [form.email, form.phone, form.wechat]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setSubmitStatus(null);
     setForm((current) => ({ ...current, [key]: value }));
     setErrors((current) => {
       const next = { ...current };
       delete next[key];
-      if (key === "phone" || key === "wechat" || key === "email") {
-        delete next.contact;
-      }
+      if (key === "phone" || key === "wechat" || key === "email") delete next.contact;
       return next;
     });
   }
@@ -101,21 +106,10 @@ export default function ContactPageClient() {
   function validate() {
     const nextErrors: FormErrors = {};
 
-    if (!form.name.trim()) {
-      nextErrors.name = "请输入姓名。";
-    }
-
-    if (!contactProvided) {
-      nextErrors.contact = "请至少填写手机号、微信号或邮箱中的一项。";
-    }
-
-    if (!form.description.trim()) {
-      nextErrors.description = "请简单描述你的业务场景或想解决的问题。";
-    }
-
-    if (form.hasSample && !sampleFile) {
-      nextErrors.sampleFile = "请上传示例文件，或取消示例文件选项。";
-    }
+    if (!form.name.trim()) nextErrors.name = "请输入姓名。";
+    if (!contactProvided) nextErrors.contact = "请至少填写手机号、微信号或邮箱中的一项。";
+    if (!form.description.trim()) nextErrors.description = "请简单描述你的业务场景或想解决的问题。";
+    if (form.hasSample && !sampleFile) nextErrors.sampleFile = "请上传示例文件，或取消示例文件选项。";
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -123,34 +117,52 @@ export default function ContactPageClient() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(false);
+    setSubmitStatus(null);
 
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     setIsSubmitting(true);
 
-    const payload = {
-      ...form,
-      sampleFile: sampleFile
-        ? {
-            name: sampleFile.name,
-            size: sampleFile.size,
-            type: sampleFile.type || "unknown"
-          }
-        : null
-    };
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          company: form.company,
+          phone: form.phone,
+          wechat: form.wechat,
+          email: form.email,
+          douyin: form.douyin,
+          industry: form.industry,
+          budget: form.budget,
+          description: form.description
+        })
+      });
+      const data = await response.json().catch(() => ({}));
 
-    console.log("contact demand payload", payload);
+      if (!response.ok || !data?.success) {
+        throw new Error(typeof data?.message === "string" ? data.message : "Contact submit failed.");
+      }
 
-    window.setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
+      setSubmitStatus("success");
       setForm(initialForm);
       setSampleFile(null);
       setErrors({});
-    }, 700);
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("Contact submit failed:", error);
+      }
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function copyText(value: string, target: CopyTarget) {
+    await navigator.clipboard.writeText(value);
+    setCopied(target);
+    window.setTimeout(() => setCopied(null), 1600);
   }
 
   return (
@@ -160,29 +172,35 @@ export default function ContactPageClient() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
               <Sparkles className="h-4 w-4 text-blue-600" />
-              企业与团队定制咨询
+              AI 定制服务咨询
             </div>
             <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-6xl">
-              告诉我们你的需求，我们帮你定制 AI 办公助手
+              告诉我你的需求，定制更适合业务的 AI 工具
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-              适合企业、小团队、个体户、电商商家、外贸公司等业务场景。把重复的表格、文档、汇报和沟通任务，做成稳定可用的办公助手。
+              适合电商、外贸、自媒体、办公自动化和团队流程提效。填写需求后我会尽快联系你，也可以直接通过邮箱或抖音联系。
             </p>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_26px_80px_rgba(15,23,42,0.08)]">
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                ["响应方式", "人工初步沟通"],
-                ["适合场景", "办公自动化"],
-                ["交付形态", "网页工具"],
-                ["后续支持", "可持续优化"]
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold text-slate-500">{label}</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-950">{value}</p>
-                </div>
-              ))}
+            <p className="text-sm font-semibold text-slate-950">真实联系方式</p>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+              <p>邮箱：<span className="font-semibold text-slate-950">{AUTHOR_EMAIL}</span></p>
+              <p>抖音号：<span className="font-semibold text-slate-950">{AUTHOR_DOUYIN_ID}</span></p>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white">
+                <Mail className="h-4 w-4" />
+                发送邮件
+              </a>
+              <button
+                type="button"
+                onClick={() => copyText(AUTHOR_DOUYIN_ID, "douyin")}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-800"
+              >
+                <Copy className="h-4 w-4" />
+                {copied === "douyin" ? "已复制" : "复制抖音号"}
+              </button>
             </div>
           </div>
         </div>
@@ -194,16 +212,22 @@ export default function ContactPageClient() {
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-6">
               <div>
                 <h2 className="text-2xl font-semibold tracking-normal text-slate-950">提交定制需求</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">填写越具体，越方便我们判断适合的工具方案和预算范围。</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">填写越具体，越方便判断方案范围、预算和排期。</p>
               </div>
               <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white sm:flex">
                 <Send className="h-5 w-5" />
               </div>
             </div>
 
-            {submitted ? (
-              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-800">
-                需求已提交，我们会尽快与你联系。
+            {submitStatus === "success" ? (
+              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm leading-7 text-emerald-900">
+                <p className="font-semibold">提交成功，我会尽快联系你。</p>
+              </div>
+            ) : null}
+
+            {submitStatus === "error" ? (
+              <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm leading-7 text-red-800">
+                <p className="font-semibold">提交失败，请稍后重试，或通过邮箱/抖音联系我。</p>
               </div>
             ) : null}
 
@@ -212,8 +236,8 @@ export default function ContactPageClient() {
               <TextField label="公司 / 团队名称" value={form.company} onChange={(value) => updateField("company", value)} icon={Building2} />
               <TextField label="手机号" value={form.phone} onChange={(value) => updateField("phone", value)} error={errors.contact} icon={Phone} />
               <TextField label="微信号" value={form.wechat} onChange={(value) => updateField("wechat", value)} icon={MessageSquareText} />
-              <TextField label="邮箱" value={form.email} onChange={(value) => updateField("email", value)} icon={Mail} className="md:col-span-2" />
-
+              <TextField label="邮箱" value={form.email} onChange={(value) => updateField("email", value)} icon={Mail} />
+              <TextField label="抖音号" value={form.douyin} onChange={(value) => updateField("douyin", value)} icon={Clipboard} />
               <SelectField label="所属行业" value={form.industry} options={industries} onChange={(value) => updateField("industry", value)} />
               <SelectField label="预算范围" value={form.budget} options={budgets} onChange={(value) => updateField("budget", value)} />
             </div>
@@ -240,15 +264,13 @@ export default function ContactPageClient() {
                   checked={form.hasSample}
                   onChange={(event) => {
                     updateField("hasSample", event.target.checked);
-                    if (!event.target.checked) {
-                      setSampleFile(null);
-                    }
+                    if (!event.target.checked) setSampleFile(null);
                   }}
                   className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>
                   <span className="block text-sm font-semibold text-slate-950">是否有示例文件上传</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-500">可上传表格、文档或流程模板，帮助我们更快理解实际业务。</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">可上传表格、文档或流程模板，帮助我更快理解实际业务。</span>
                 </span>
               </label>
 
@@ -260,12 +282,7 @@ export default function ContactPageClient() {
                         <FileUp className="h-4 w-4 shrink-0 text-blue-600" />
                         <span className="truncate text-sm font-medium text-slate-700">{sampleFile.name}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setSampleFile(null)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
-                        aria-label="删除示例文件"
-                      >
+                      <button type="button" onClick={() => setSampleFile(null)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-950" aria-label="删除示例文件">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
@@ -312,7 +329,7 @@ export default function ContactPageClient() {
 
       <section className="border-t border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <SectionHeader title="常见问题" description="以下是定制前经常会确认的问题，具体方案会根据你的流程复杂度评估。" />
+          <SectionHeader title="常见问题" description="以下是提交定制需求前经常会确认的问题。" />
           <div className="mt-10 divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-white px-6 shadow-sm">
             {faqs.map((faq) => (
               <details key={faq.question} className="group py-5">
@@ -343,7 +360,7 @@ function TextField({
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  icon: typeof UserRound;
+  icon: LucideIcon;
   required?: boolean;
   className?: string;
 }) {
@@ -411,7 +428,7 @@ function ProcessCard() {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
           <Clock3 className="h-5 w-5" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-950">提交流程</h2>
+        <h2 className="text-lg font-semibold text-slate-950">联系流程</h2>
       </div>
       <div className="mt-5 space-y-4">
         {processSteps.map((step, index) => (

@@ -4,6 +4,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   ClipboardList,
+  Copy,
   FileSearch,
   FileText,
   Mail,
@@ -14,6 +15,7 @@ import {
   Trash2,
   UploadCloud
 } from "lucide-react";
+import { AUTHOR_DOUYIN_ID, CONTACT_MAILTO, isQuotaEmptyMessage } from "@/lib/contact-info";
 import { canUseTool, consumeQuotaAfterSuccess } from "@/lib/user-store";
 import Link from "next/link";
 import { ComponentType, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -132,7 +134,7 @@ const tools: ToolConfig[] = [
       },
       {
         type: "select",
-        name: "tone",
+        name: "report_style",
         label: "报告风格",
         options: ["正式汇报", "简洁版", "详细版", "领导汇报", "数据型"],
         required: true
@@ -281,6 +283,7 @@ export default function OfficeToolboxClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [quotaContactCopied, setQuotaContactCopied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
@@ -326,6 +329,7 @@ export default function OfficeToolboxClient() {
     setError("");
     setScanWarning("");
     setCopied(false);
+    setQuotaContactCopied(false);
 
     if (activeTool.file && !file) {
       setError("请先上传需要处理的文件。");
@@ -384,6 +388,7 @@ export default function OfficeToolboxClient() {
     setError("");
     setScanWarning("");
     setCopied(false);
+    setQuotaContactCopied(false);
     setIsLoading(true);
     setLoadingStep(0);
 
@@ -591,7 +596,7 @@ export default function OfficeToolboxClient() {
           tool_type: toolTypeMap.report.value,
           text_input: value.work_content || "",
           report_type: value.report_type || "",
-          report_style: value.tone || ""
+          report_style: value.report_style || ""
         };
       case "ppt":
         const pptPages = Number(value.page_count);
@@ -622,6 +627,12 @@ export default function OfficeToolboxClient() {
     await navigator.clipboard.writeText(result);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function copyQuotaDouyinId() {
+    await navigator.clipboard.writeText(AUTHOR_DOUYIN_ID);
+    setQuotaContactCopied(true);
+    window.setTimeout(() => setQuotaContactCopied(false), 1600);
   }
 
   const ActiveIcon = activeTool.icon;
@@ -790,15 +801,22 @@ export default function OfficeToolboxClient() {
                           去登录
                         </Link>
                       ) : null}
-                      {error === "免费额度已用完，请升级套餐或联系定制" ? (
-                        <>
-                          <Link href="/pricing" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
-                            查看套餐
-                          </Link>
-                          <Link href="/contact" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
-                            联系定制
-                          </Link>
-                        </>
+                      {isQuotaEmptyMessage(error) ? (
+                        <div className="mt-3 space-y-3 rounded-xl border border-red-100 bg-white/70 p-3 text-red-800">
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <Link href="/contact" className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white">
+                              联系定制
+                            </Link>
+                            <a href={CONTACT_MAILTO} className="inline-flex h-10 items-center justify-center rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-800">
+                              发送邮件
+                            </a>
+                            <button type="button" onClick={copyQuotaDouyinId} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-800">
+                              <Copy className="h-4 w-4" />
+                              {quotaContactCopied ? "已复制" : "复制抖音号"}
+                            </button>
+                          </div>
+                          <p className="text-xs leading-5 text-red-700">请打开抖音搜索：{AUTHOR_DOUYIN_ID}</p>
+                        </div>
                       ) : null}
                     </div>
                   ) : null}

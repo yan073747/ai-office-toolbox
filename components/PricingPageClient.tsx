@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, HelpCircle, Sparkles, X } from "lucide-react";
+import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
 import SmartEntryLink from "@/components/SmartEntryLink";
 import Link from "next/link";
 import { useState } from "react";
@@ -260,9 +261,17 @@ function SectionHeader({ title, description }: { title: string; description?: st
 }
 
 function PaymentModal({ onClose }: { onClose: () => void }) {
+  const [copied, setCopied] = useState<"email" | "douyin" | null>(null);
+
+  async function copyText(value: string, target: "email" | "douyin") {
+    await navigator.clipboard.writeText(value);
+    setCopied(target);
+    window.setTimeout(() => setCopied(null), 1600);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
             <Sparkles className="h-5 w-5" />
@@ -273,15 +282,25 @@ function PaymentModal({ onClose }: { onClose: () => void }) {
         </div>
         <h2 className="mt-5 text-xl font-semibold text-slate-950">支付功能即将上线</h2>
         <p className="mt-3 text-sm leading-7 text-slate-600">
-          当前阶段暂未接入真实支付接口。你可以先免费体验，或联系我们开通定制方案。
+          当前阶段暂未接入真实支付接口。想继续体验、开通更多额度或定制专属 AI 工具，请通过联系页、邮箱或抖音联系作者。
         </p>
+        <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          <p>邮箱：<span className="font-semibold text-slate-950">{AUTHOR_EMAIL}</span></p>
+          <p className="mt-1">抖音号：<span className="font-semibold text-slate-950">{AUTHOR_DOUYIN_ID}</span></p>
+        </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <SmartEntryLink className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
-            免费体验
-          </SmartEntryLink>
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            联系我们
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+            联系定制
           </Link>
+          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            发送邮件
+          </a>
+          <button type="button" onClick={() => copyText(AUTHOR_EMAIL, "email")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            {copied === "email" ? "已复制" : "复制邮箱"}
+          </button>
+          <button type="button" onClick={() => copyText(AUTHOR_DOUYIN_ID, "douyin")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            {copied === "douyin" ? "已复制" : "复制抖音号"}
+          </button>
         </div>
       </div>
     </div>

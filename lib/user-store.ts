@@ -38,6 +38,8 @@ export type ToolUsageInfo = {
   inputType: string;
 };
 
+const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
+
 function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
 }
@@ -241,7 +243,7 @@ export function canUseTool(): ToolUseCheck {
     return {
       canUse: false,
       reason: "quota_empty",
-      message: "免费额度已用完，请升级套餐或联系定制"
+      message: QUOTA_EMPTY_MESSAGE
     };
   }
 
@@ -258,7 +260,7 @@ export function consumeQuotaAfterSuccess(tool: ToolUsageInfo) {
     throw new Error("请先登录后使用。");
   }
   if (currentUser.freeQuota <= 0) {
-    throw new Error("免费额度已用完，请升级套餐或联系定制。");
+    throw new Error(QUOTA_EMPTY_MESSAGE);
   }
 
   updateUserQuota(currentUser.freeQuota - 1);
