@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 type ContactPayload = {
   name?: string;
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
     }
 
     await createRecord(config.baseAppToken, tableId, token, recordFields);
+    await saveContactSubmission(payload as RequiredContactPayload, tableId);
 
     return NextResponse.json({
       success: true,
@@ -239,6 +241,24 @@ async function createRecord(baseAppToken: string, tableId: string, token: string
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ fields })
+  });
+}
+
+async function saveContactSubmission(payload: RequiredContactPayload, feishuTableId: string) {
+  await prisma.contactSubmission.create({
+    data: {
+      name: payload.name.trim(),
+      company: payload.company?.trim() || null,
+      phone: payload.phone?.trim() || null,
+      wechat: payload.wechat?.trim() || null,
+      email: payload.email?.trim() || null,
+      douyin: payload.douyin?.trim() || null,
+      industry: payload.industry.trim(),
+      budget: payload.budget.trim(),
+      description: payload.description.trim(),
+      sourcePage: "联系定制",
+      feishuTableId
+    }
   });
 }
 

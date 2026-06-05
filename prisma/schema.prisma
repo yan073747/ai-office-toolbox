@@ -94,6 +94,26 @@ model RateLimitEvent {
   @@map("rate_limit_events")
 }
 
+model ContactSubmission {
+  id            String   @id @default(cuid())
+  name          String
+  company       String?
+  phone         String?
+  wechat        String?
+  email         String?
+  douyin        String?
+  industry      String
+  budget        String
+  description   String
+  sourcePage    String   @default("联系定制") @map("source_page")
+  feishuTableId String?  @map("feishu_table_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([email])
+  @@map("contact_submissions")
+}
+
 model Order {
   id              String    @id @default(cuid())
   userId          String    @map("user_id")
