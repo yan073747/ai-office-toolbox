@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
+import { getServerQuota } from "@/lib/server-quota";
 
 export async function GET() {
   const user = await getCurrentServerUser();
@@ -11,8 +12,14 @@ export async function GET() {
     });
   }
 
+  const quota = await getServerQuota(user.id);
+
   return NextResponse.json({
     ok: true,
-    user
+    user: {
+      ...user,
+      planName: "免费体验版",
+      freeQuota: quota.remainingQuota
+    }
   });
 }

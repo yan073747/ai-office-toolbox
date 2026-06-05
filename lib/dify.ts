@@ -47,6 +47,18 @@ function getAuthHeaders(apiKey: string) {
   };
 }
 
+function isDevelopment() {
+  return process.env.NODE_ENV !== "production";
+}
+
+function getInputSummary(inputs: Record<string, unknown>) {
+  return {
+    inputKeys: Object.keys(inputs),
+    hasUserRequirement: Boolean(inputs.user_requirement || inputs.analysis_goal || inputs.text_input),
+    fileCount: Array.isArray(inputs.files) ? inputs.files.length : 0
+  };
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = WORKFLOW_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = windowlessSetTimeout(() => controller.abort(), timeoutMs);
@@ -113,17 +125,19 @@ export async function uploadFile(apiKey: string, file: File): Promise<UploadedFi
   formData.append("user", DIFY_USER);
 
   const url = `${getBaseUrl()}/files/upload`;
-  console.log("Dify upload request:", {
-    url,
-    method: "POST",
-    user: DIFY_USER,
-    file: {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    },
-    authHeaderPresent: Boolean(apiKey)
-  });
+  if (isDevelopment()) {
+    console.log("Dify upload request:", {
+      url,
+      method: "POST",
+      user: DIFY_USER,
+      file: {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      },
+      authHeaderPresent: Boolean(apiKey)
+    });
+  }
 
   const response = await fetchWithTimeout(url, {
     method: "POST",
@@ -132,8 +146,9 @@ export async function uploadFile(apiKey: string, file: File): Promise<UploadedFi
   });
 
   const data = (await response.json().catch(() => null)) as DifyUploadResponse | null;
-  console.log("Dify upload status:", response.status);
-  console.log("Dify response:", data);
+  if (isDevelopment()) {
+    console.log("Dify upload status:", response.status);
+  }
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
@@ -173,17 +188,15 @@ export async function runWorkflow(
     user: DIFY_USER
   };
 
-  console.log("Dify workflow request:", {
-    toolName: options?.toolName,
-    workflowId: options?.workflowId,
-    url,
-    method: "POST",
-    headers: {
-      Authorization: apiKey ? "Bearer ***" : "",
-      "Content-Type": "application/json"
-    },
-    body: requestBody
-  });
+  if (isDevelopment()) {
+    console.log("Dify workflow request:", {
+      toolName: options?.toolName,
+      workflowId: options?.workflowId,
+      url,
+      method: "POST",
+      ...getInputSummary(inputs)
+    });
+  }
 
   const response = await fetchWithTimeout(url, {
     method: "POST",
@@ -195,8 +208,9 @@ export async function runWorkflow(
   });
 
   const data = await response.json().catch(() => null);
-  console.log("Dify status:", response.status);
-  console.log("Dify response:", data);
+  if (isDevelopment()) {
+    console.log("Dify status:", response.status);
+  }
 
   if (!response.ok) {
     const message = readNestedValue(data, ["message"]) || readNestedValue(data, ["data", "error"]);
@@ -235,17 +249,15 @@ export async function runWorkflowStreaming(
     user: DIFY_USER
   };
 
-  console.log("Dify workflow request:", {
-    toolName: options?.toolName,
-    workflowId: options?.workflowId,
-    url,
-    method: "POST",
-    headers: {
-      Authorization: apiKey ? "Bearer ***" : "",
-      "Content-Type": "application/json"
-    },
-    body: requestBody
-  });
+  if (isDevelopment()) {
+    console.log("Dify workflow request:", {
+      toolName: options?.toolName,
+      workflowId: options?.workflowId,
+      url,
+      method: "POST",
+      ...getInputSummary(inputs)
+    });
+  }
 
   const controller = new AbortController();
   const timer = windowlessSetTimeout(() => controller.abort(), WORKFLOW_TIMEOUT_MS * 2);
@@ -262,8 +274,9 @@ export async function runWorkflowStreaming(
     });
 
     const rawText = await response.text();
-    console.log("Dify status:", response.status);
-    console.log("Dify response:", rawText);
+    if (isDevelopment()) {
+      console.log("Dify status:", response.status);
+    }
 
     if (!response.ok) {
       const data = safeJsonParse(rawText);
@@ -286,7 +299,6 @@ export async function runWorkflowStreaming(
       events[events.length - 1];
 
     const data = finishedEvent?.data || { events };
-    console.log("Dify response:", data);
     return data;
   } catch (error) {
     if (error instanceof DifyApiError) throw error;

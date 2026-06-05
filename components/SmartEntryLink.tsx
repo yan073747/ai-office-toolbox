@@ -19,8 +19,8 @@ export default function SmartEntryLink({
   const [href, setHref] = useState(guestHref);
 
   useEffect(() => {
-    function refreshHref() {
-      setHref(getCurrentUser() ? authenticatedHref : guestHref);
+    async function refreshHref() {
+      setHref((await getCurrentUser()) ? authenticatedHref : guestHref);
     }
 
     refreshHref();

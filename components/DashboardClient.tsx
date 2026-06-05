@@ -4,6 +4,7 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
+  Download,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -14,20 +15,67 @@ import {
   X
 } from "lucide-react";
 import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
-import { getCurrentUser, getUsageRecords, logoutUser } from "@/lib/user-store";
+import { logoutUser } from "@/lib/user-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import type { LocalUser, UsageRecord } from "@/lib/user-store";
 
 type TabId = "overview" | "quota" | "records" | "orders" | "settings";
+type RangeDays = 7 | 30 | 90 | "all";
+type RecordRange = RangeDays;
 
 type NavItem = {
   id: TabId;
   label: string;
   icon: LucideIcon;
+};
+
+type TrendItem = {
+  date: string;
+  total: number;
+  success: number;
+  failed: number;
+  quotaUsed: number;
+};
+
+type ToolStat = {
+  toolId: string;
+  toolName: string;
+  count: number;
+  quotaUsed: number;
+};
+
+type DashboardSummary = {
+  user: {
+    id: string;
+    email: string;
+    planName: "免费体验版";
+  };
+  quota: {
+    totalQuota: number;
+    usedQuota: number;
+    remainingQuota: number;
+  };
+  totals: {
+    totalCalls: number;
+    successfulCalls: number;
+    failedCalls: number;
+    quotaUsed: number;
+  };
+  latestRecord: UsageRecord | null;
+  trend: TrendItem[];
+  byTool: ToolStat[];
+};
+
+type RecordsResponse = {
+  items: UsageRecord[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 };
 
 const navItems: NavItem[] = [
@@ -38,67 +86,181 @@ const navItems: NavItem[] = [
   { id: "settings", label: "账号设置", icon: Settings }
 ];
 
+const rangeOptions: Array<{ label: string; value: RangeDays }> = [
+  { label: "近 7 天", value: 7 },
+  { label: "近 30 天", value: 30 },
+  { label: "近 90 天", value: 90 },
+  { label: "全部", value: "all" }
+];
+
+const recordRangeOptions: Array<{ label: string; value: RecordRange }> = [
+  { label: "近 7 天", value: 7 },
+  { label: "近 30 天", value: 30 },
+  { label: "近 90 天", value: 90 },
+  { label: "全部", value: "all" }
+];
+
+const recordsPageSize = 8;
+
 export default function DashboardClient() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [user, setUser] = useState<LocalUser | null>(null);
-  const [records, setRecords] = useState<UsageRecord[]>([]);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [rangeDays, setRangeDays] = useState<RangeDays>(30);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [recordsData, setRecordsData] = useState<RecordsResponse>({
+    items: [],
+    page: 1,
+    pageSize: recordsPageSize,
+    total: 0,
+    totalPages: 1
+  });
+  const [recordPage, setRecordPage] = useState(1);
+  const [recordToolId, setRecordToolId] = useState("all");
+  const [recordRangeDays, setRecordRangeDays] = useState<RecordRange>(30);
+  const [loading, setLoading] = useState(true);
+  const [recordsLoading, setRecordsLoading] = useState(false);
   const activeItem = navItems.find((item) => item.id === activeTab) || navItems[0];
-  const usedCount = records.reduce((total, record) => total + record.quotaUsed, 0);
-  const latestRecord = records[0];
+
+  const user: LocalUser | null = summary
+    ? {
+        id: summary.user.id,
+        email: summary.user.email,
+        freeQuota: summary.quota.remainingQuota,
+        planName: summary.user.planName
+      }
+    : null;
+
+  const toolOptions = useMemo(() => [{ toolId: "all", toolName: "全部工具" }, ...(summary?.byTool || [])], [summary?.byTool]);
 
   const overviewStats = useMemo(
     () => [
-      { label: "当前套餐", value: user?.planName || "免费体验版", note: "可升级个人套餐" },
-      { label: "剩余额度", value: `${user?.freeQuota ?? 0} 次`, note: "本地免费额度" },
-      { label: "已使用次数", value: `${usedCount} 次`, note: "本地使用统计" },
-      { label: "最近一次使用工具", value: latestRecord?.toolName || "暂无", note: "成功调用后自动记录" }
+      { label: "当前套餐", value: summary?.user.planName || "免费体验版", note: "可升级个人套餐" },
+      { label: "总额度", value: `${summary?.quota.totalQuota ?? 0} 次`, note: "云端数据库保存" },
+      { label: "剩余额度", value: `${summary?.quota.remainingQuota ?? 0} 次`, note: "可继续调用次数" },
+      { label: "最近一次使用工具", value: summary?.latestRecord?.toolName || "暂无", note: "成功调用后自动记录" }
     ],
-    [latestRecord?.toolName, usedCount, user?.freeQuota, user?.planName]
+    [summary]
   );
 
   const quotaItems = useMemo(
     () => [
-      { label: "免费体验额度", value: `${user?.freeQuota ?? 0} 次`, note: "注册后赠送 5 次" },
-      { label: "已使用额度", value: `${usedCount} 次`, note: "成功调用后扣减" },
-      { label: "套餐额度", value: "未开通", note: "个人套餐或企业套餐" },
-      { label: "到期时间", value: "-", note: "套餐开通后显示" }
+      { label: "总额度", value: `${summary?.quota.totalQuota ?? 0} 次`, note: "注册后默认 5 次免费体验" },
+      { label: "已使用额度", value: `${summary?.quota.usedQuota ?? 0} 次`, note: "工具成功调用后扣减" },
+      { label: "剩余额度", value: `${summary?.quota.remainingQuota ?? 0} 次`, note: "云端实时保存" },
+      { label: "本周期调用", value: `${summary?.totals.totalCalls ?? 0} 次`, note: `${rangeLabel(rangeDays)}统计` }
     ],
-    [usedCount, user?.freeQuota]
+    [rangeDays, summary]
   );
 
+  const loadSummary = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/dashboard/summary?range=${rangeDays}`, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data?.ok === false) {
+        setSummary(null);
+        return;
+      }
+      setSummary(data as DashboardSummary);
+    } finally {
+      setLoading(false);
+    }
+  }, [rangeDays]);
+
+  const loadRecords = useCallback(async () => {
+    setRecordsLoading(true);
+    try {
+      const dateFrom = getDateFrom(recordRangeDays);
+      const params = new URLSearchParams({
+        page: String(recordPage),
+        pageSize: String(recordsPageSize)
+      });
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (recordToolId !== "all") params.set("toolId", recordToolId);
+      const response = await fetch(`/api/usage-records?${params.toString()}`, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data?.ok === false) {
+        setRecordsData({ items: [], page: 1, pageSize: recordsPageSize, total: 0, totalPages: 1 });
+        return;
+      }
+      setRecordsData({
+        items: (data.items || data.records || []).map((record: UsageRecord) => ({
+          ...record,
+          createdAt: new Date(record.createdAt).toISOString()
+        })),
+        page: data.page || recordPage,
+        pageSize: data.pageSize || recordsPageSize,
+        total: data.total || 0,
+        totalPages: data.totalPages || 1
+      });
+    } finally {
+      setRecordsLoading(false);
+    }
+  }, [recordPage, recordRangeDays, recordToolId]);
+
   useEffect(() => {
-    refreshUserState();
+    loadSummary();
 
     function handleUserUpdate() {
-      refreshUserState();
+      loadSummary();
+      loadRecords();
     }
 
-    window.addEventListener("storage", handleUserUpdate);
     window.addEventListener("ai-toolbox-user-updated", handleUserUpdate);
-    return () => {
-      window.removeEventListener("storage", handleUserUpdate);
-      window.removeEventListener("ai-toolbox-user-updated", handleUserUpdate);
-    };
-  }, []);
+    return () => window.removeEventListener("ai-toolbox-user-updated", handleUserUpdate);
+  }, [loadRecords, loadSummary]);
 
-  function refreshUserState() {
-    setUser(getCurrentUser());
-    setRecords(getUsageRecords());
-  }
+  useEffect(() => {
+    loadRecords();
+  }, [loadRecords]);
 
   function selectTab(tab: TabId) {
     setActiveTab(tab);
     setDrawerOpen(false);
   }
 
-  function handleLogout() {
-    logoutUser();
-    setUser(null);
-    setRecords([]);
+  function updateRange(value: RangeDays) {
+    setRangeDays(value);
+    setRecordPage(1);
+  }
+
+  function updateRecordTool(toolId: string) {
+    setRecordToolId(toolId);
+    setRecordPage(1);
+  }
+
+  function updateRecordRange(value: RecordRange) {
+    setRecordRangeDays(value);
+    setRecordPage(1);
+  }
+
+  const usageExportHref = useMemo(() => {
+    const params = new URLSearchParams({ format: "csv" });
+    const dateFrom = getDateFrom(recordRangeDays);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (recordToolId !== "all") params.set("toolId", recordToolId);
+    return `/api/usage-records/export?${params.toString()}`;
+  }, [recordRangeDays, recordToolId]);
+
+  async function handleLogout() {
+    await logoutUser();
+    setSummary(null);
+    setRecordsData({ items: [], page: 1, pageSize: recordsPageSize, total: 0, totalPages: 1 });
     router.push("/");
+  }
+
+  if (loading && !summary) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-5 py-12 text-slate-950 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <UserCircle className="mx-auto h-12 w-12 text-slate-400" />
+          <h1 className="mt-5 text-2xl font-semibold text-slate-950">正在加载用户数据</h1>
+          <p className="mt-3 text-sm leading-7 text-slate-500">请稍候。</p>
+        </div>
+      </main>
+    );
   }
 
   if (!user) {
@@ -165,25 +327,47 @@ export default function DashboardClient() {
 
         <section className="mt-4 min-w-0 flex-1 lg:mt-0">
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
                 <h1 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">{activeItem.label}</h1>
               </div>
-              <Link
-                href="/tools"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-              >
-                去使用工具
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <RangeSelector value={rangeDays} onChange={updateRange} />
+                <Link
+                  href="/tools"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                >
+                  去使用工具
+                </Link>
+              </div>
             </div>
 
             <div className="pt-6">
-              {activeTab === "overview" ? (
-                <OverviewPanel stats={overviewStats} onOpenRecords={() => selectTab("records")} onOpenUpgrade={() => setPaymentOpen(true)} />
+              {activeTab === "overview" && summary ? (
+                <OverviewPanel
+                  stats={overviewStats}
+                  summary={summary}
+                  rangeDays={rangeDays}
+                  onRangeChange={updateRange}
+                  onOpenRecords={() => selectTab("records")}
+                  onOpenUpgrade={() => setPaymentOpen(true)}
+                />
               ) : null}
               {activeTab === "quota" ? <QuotaPanel quotaItems={quotaItems} onOpenUpgrade={() => setPaymentOpen(true)} /> : null}
-              {activeTab === "records" ? <RecordsPanel records={records} /> : null}
+              {activeTab === "records" ? (
+                <RecordsPanel
+                  recordsData={recordsData}
+                  loading={recordsLoading}
+                  toolOptions={toolOptions}
+                  selectedToolId={recordToolId}
+                  selectedRange={recordRangeDays}
+                  exportHref={usageExportHref}
+                  onToolChange={updateRecordTool}
+                  onRangeChange={updateRecordRange}
+                  onPageChange={setRecordPage}
+                />
+              ) : null}
               {activeTab === "orders" ? <OrdersPanel /> : null}
               {activeTab === "settings" ? <SettingsPanel user={user} onLogout={handleLogout} /> : null}
             </div>
@@ -210,6 +394,27 @@ export default function DashboardClient() {
   );
 }
 
+function RangeSelector({ value, onChange }: { value: RangeDays; onChange: (value: RangeDays) => void }) {
+  return (
+    <div className="inline-flex h-11 rounded-xl border border-slate-200 bg-slate-50 p-1">
+      {rangeOptions.map((item) => (
+        <button
+          key={item.value}
+          type="button"
+          onClick={() => onChange(item.value)}
+          className={
+            value === item.value
+              ? "rounded-lg bg-white px-3 text-sm font-semibold text-slate-950 shadow-sm"
+              : "rounded-lg px-3 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
+          }
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function SidebarContent({
   activeTab,
   user,
@@ -229,7 +434,7 @@ function SidebarContent({
             <UserCircle className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-950">本地用户</p>
+            <p className="truncate text-sm font-semibold text-slate-950">当前用户</p>
             <p className="truncate text-xs text-slate-500">{user.email}</p>
           </div>
         </div>
@@ -239,7 +444,6 @@ function SidebarContent({
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
-
           return (
             <button
               key={item.id}
@@ -263,10 +467,16 @@ function SidebarContent({
 
 function OverviewPanel({
   stats,
+  summary,
+  rangeDays,
+  onRangeChange,
   onOpenRecords,
   onOpenUpgrade
 }: {
   stats: Array<{ label: string; value: string; note: string }>;
+  summary: DashboardSummary;
+  rangeDays: RangeDays;
+  onRangeChange: (value: RangeDays) => void;
   onOpenRecords: () => void;
   onOpenUpgrade: () => void;
 }) {
@@ -278,26 +488,46 @@ function OverviewPanel({
         ))}
       </div>
 
+      <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <h2 className="font-semibold text-slate-950">调用趋势</h2>
+            </div>
+            <RangeSelector value={rangeDays} onChange={onRangeChange} />
+          </div>
+          <UsageTrendChart trend={summary.trend} />
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <h2 className="font-semibold text-slate-950">工具分类统计</h2>
+          <ToolStatsList stats={summary.byTool} />
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <div className="flex items-center gap-3">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
+            <ClipboardList className="h-5 w-5 text-blue-600" />
             <h2 className="font-semibold text-slate-950">使用概览</h2>
           </div>
-          <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm leading-7 text-slate-500">
-            当前版本使用 localStorage 保存额度和记录。后续接入真实数据库后，这里可以展示更完整的用量趋势和工具分布。
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <MiniStat label="成功调用" value={`${summary.totals.successfulCalls} 次`} />
+            <MiniStat label="失败调用" value={`${summary.totals.failedCalls} 次`} />
+            <MiniStat label="统计范围" value={rangeLabel(rangeDays)} />
           </div>
           <button
             type="button"
             onClick={onOpenRecords}
             className="mt-5 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
           >
-            历史记录详情页
+            查看分页记录
           </button>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
           <h2 className="font-semibold">下一步建议</h2>
-          <p className="mt-3 text-sm leading-7 text-slate-300">你可以先体验一个工具，生成结果后会在使用记录中展示。</p>
+          <p className="mt-3 text-sm leading-7 text-slate-300">你可以继续体验工具，生成成功后会自动扣减额度并写入使用记录。</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link href="/tools" className="inline-flex h-10 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-slate-950">
               查看工具
@@ -312,6 +542,96 @@ function OverviewPanel({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function UsageTrendChart({ trend }: { trend: TrendItem[] }) {
+  const totals = trend.reduce(
+    (acc, item) => ({
+      total: acc.total + item.total,
+      success: acc.success + item.success,
+      failed: acc.failed + item.failed
+    }),
+    { total: 0, success: 0, failed: 0 }
+  );
+  const maxValue = Math.max(1, ...trend.flatMap((item) => [item.total, item.success, item.failed]));
+  const width = 680;
+  const height = 220;
+  const padding = { top: 18, right: 18, bottom: 30, left: 34 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  function pointFor(item: TrendItem, index: number, key: "total" | "success" | "failed") {
+    const x = padding.left + (trend.length <= 1 ? chartWidth / 2 : (index / (trend.length - 1)) * chartWidth);
+    const y = padding.top + chartHeight - (item[key] / maxValue) * chartHeight;
+    return `${x},${y}`;
+  }
+
+  function polyline(key: "total" | "success" | "failed") {
+    return trend.map((item, index) => pointFor(item, index, key)).join(" ");
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <MiniStat label="总调用次数" value={`${totals.total} 次`} />
+        <MiniStat label="成功次数" value={`${totals.success} 次`} />
+        <MiniStat label="失败次数" value={`${totals.failed} 次`} />
+      </div>
+      {trend.some((item) => item.total > 0) ? (
+        <div className="mt-4 overflow-x-auto">
+          <svg viewBox={`0 0 ${width} ${height}`} className="h-64 min-w-[640px] rounded-xl bg-white">
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const y = padding.top + chartHeight * ratio;
+              return <line key={ratio} x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" />;
+            })}
+            <polyline fill="none" stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" points={polyline("total")} />
+            <polyline fill="none" stroke="#059669" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" points={polyline("success")} />
+            <polyline fill="none" stroke="#dc2626" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" points={polyline("failed")} />
+            {trend.map((item, index) => {
+              const showLabel = trend.length <= 7 || index === 0 || index === trend.length - 1 || index % Math.ceil(trend.length / 6) === 0;
+              return showLabel ? (
+                <text key={item.date} x={pointFor(item, index, "total").split(",")[0]} y={height - 8} textAnchor="middle" className="fill-slate-400 text-[10px]">
+                  {item.date.slice(5)}
+                </text>
+              ) : null;
+            })}
+          </svg>
+          <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
+            <span className="inline-flex items-center gap-2"><i className="h-2 w-5 rounded-full bg-blue-600" />总调用</span>
+            <span className="inline-flex items-center gap-2"><i className="h-2 w-5 rounded-full bg-emerald-600" />成功</span>
+            <span className="inline-flex items-center gap-2"><i className="h-2 w-5 rounded-full bg-red-600" />失败</span>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 flex h-48 items-center justify-center rounded-xl bg-white text-center text-sm text-slate-500">当前时间范围内暂无调用记录</div>
+      )}
+    </div>
+  );
+}
+
+function ToolStatsList({ stats }: { stats: ToolStat[] }) {
+  const maxCount = Math.max(1, ...stats.map((item) => item.count));
+
+  if (!stats.length) {
+    return <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">暂无工具调用统计</div>;
+  }
+
+  return (
+    <div className="mt-5 space-y-3">
+      {stats.map((item) => (
+        <div key={item.toolId} className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-sm font-semibold text-slate-950">{item.toolName}</p>
+            <p className="shrink-0 text-sm font-semibold text-slate-700">{item.count} 次</p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-slate-950" style={{ width: `${(item.count / maxCount) * 100}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-slate-500">消耗额度 {item.quotaUsed} 次</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -336,29 +656,55 @@ function QuotaPanel({ quotaItems, onOpenUpgrade }: { quotaItems: Array<{ label: 
   );
 }
 
-function RecordsPanel({ records }: { records: UsageRecord[] }) {
-  const [toolFilter, setToolFilter] = useState("全部工具");
-  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
-  const toolOptions = useMemo(() => ["全部工具", ...Array.from(new Set(records.map((record) => record.toolName)))], [records]);
-  const filteredRecords = useMemo(() => {
-    return records
-      .filter((record) => toolFilter === "全部工具" || record.toolName === toolFilter)
-      .sort((left, right) => {
-        const leftTime = new Date(left.createdAt).getTime();
-        const rightTime = new Date(right.createdAt).getTime();
-        return sortOrder === "desc" ? rightTime - leftTime : leftTime - rightTime;
-      });
-  }, [records, sortOrder, toolFilter]);
+function RecordsPanel({
+  recordsData,
+  loading,
+  toolOptions,
+  selectedToolId,
+  selectedRange,
+  exportHref,
+  onToolChange,
+  onRangeChange,
+  onPageChange
+}: {
+  recordsData: RecordsResponse;
+  loading: boolean;
+  toolOptions: Array<{ toolId: string; toolName: string }>;
+  selectedToolId: string;
+  selectedRange: RecordRange;
+  exportHref: string;
+  onToolChange: (toolId: string) => void;
+  onRangeChange: (range: RecordRange) => void;
+  onPageChange: (page: number) => void;
+}) {
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  if (!records.length) {
-    return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center">
-        <p className="text-lg font-semibold text-slate-950">暂无使用记录，去体验一个工具吧。</p>
-        <Link href="/tools" className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white">
-          去体验
-        </Link>
-      </div>
-    );
+  async function handleExportCsv() {
+    setExporting(true);
+    setExportMessage(null);
+    try {
+      const response = await fetch(exportHref, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("export_failed");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const disposition = response.headers.get("content-disposition") || "";
+      const filenameMatch = disposition.match(/filename="([^"]+)"/);
+      link.href = url;
+      link.download = filenameMatch?.[1] || `usage-records-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setExportMessage({ type: "success", text: "导出成功，CSV 文件已开始下载。" });
+    } catch {
+      setExportMessage({ type: "error", text: "导出失败，请稍后重试。" });
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
@@ -366,47 +712,100 @@ function RecordsPanel({ records }: { records: UsageRecord[] }) {
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-semibold text-slate-950">历史记录详情页</h2>
-          <p className="mt-1 text-sm text-slate-500">仅展示当前登录用户的本地使用记录。</p>
+          <p className="mt-1 text-sm text-slate-500">分页查询当前登录用户的云端使用记录。</p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <select
-            value={toolFilter}
-            onChange={(event) => setToolFilter(event.target.value)}
+            value={selectedRange}
+            onChange={(event) => onRangeChange(event.target.value === "all" ? "all" : (Number(event.target.value) as RangeDays))}
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
           >
-            {toolOptions.map((toolName) => (
-              <option key={toolName} value={toolName}>
-                {toolName}
+            {recordRangeOptions.map((range) => (
+              <option key={String(range.value)} value={range.value}>
+                {range.label}
               </option>
             ))}
           </select>
           <select
-            value={sortOrder}
-            onChange={(event) => setSortOrder(event.target.value === "asc" ? "asc" : "desc")}
+            value={selectedToolId}
+            onChange={(event) => onToolChange(event.target.value)}
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
           >
-            <option value="desc">时间从新到旧</option>
-            <option value="asc">时间从旧到新</option>
+            {toolOptions.map((tool) => (
+              <option key={tool.toolId} value={tool.toolId}>
+                {tool.toolName}
+              </option>
+            ))}
           </select>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={exporting}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            <Download className="h-4 w-4" />
+            {exporting ? "导出中..." : "导出 CSV"}
+          </button>
         </div>
       </div>
+      {exportMessage ? (
+        <div className={exportMessage.type === "success" ? "rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700" : "rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"}>
+          {exportMessage.text}
+        </div>
+      ) : null}
 
-      {filteredRecords.length ? (
-        <DataTable
-          headers={["时间", "工具名称", "输入类型", "状态", "消耗额度"]}
-          rows={filteredRecords.map((record) => [
-            formatDateTime(record.createdAt),
-            record.toolName,
-            record.inputType,
-            <StatusBadge key="status" status="已完成" />,
-            `${record.quotaUsed} 次`
-          ])}
-        />
+      {loading ? (
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">正在加载使用记录...</div>
+      ) : recordsData.items.length ? (
+        <>
+          <DataTable
+            headers={["调用时间", "工具名称", "状态", "消耗额度", "错误信息"]}
+            rows={recordsData.items.map((record) => [
+              formatDateTime(record.createdAt),
+              record.toolName,
+              <StatusBadge key="status" status={record.status === "success" ? "已完成" : "失败"} />,
+              `${record.quotaUsed} 次`,
+              record.errorMessage ? <span className="text-red-600">{record.errorMessage}</span> : null
+            ])}
+          />
+          <Pagination page={recordsData.page} totalPages={recordsData.totalPages} total={recordsData.total} onPageChange={onPageChange} />
+        </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-          <p className="text-base font-semibold text-slate-950">当前筛选条件下暂无记录</p>
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center">
+          <p className="text-lg font-semibold text-slate-950">暂无使用记录，先去体验一个工具吧。</p>
+          <Link href="/tools" className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white">
+            去体验
+          </Link>
         </div>
       )}
+    </div>
+  );
+}
+
+function Pagination({ page, totalPages, total, onPageChange }: { page: number; totalPages: number; total: number; onPageChange: (page: number) => void }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        共 <span className="font-semibold text-slate-950">{total}</span> 条记录，第 {page} / {totalPages} 页
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className="h-9 rounded-xl border border-slate-200 px-4 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300"
+        >
+          上一页
+        </button>
+        <button
+          type="button"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className="h-9 rounded-xl border border-slate-200 px-4 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300"
+        >
+          下一页
+        </button>
+      </div>
     </div>
   );
 }
@@ -426,14 +825,14 @@ function SettingsPanel({ user, onLogout }: { user: LocalUser; onLogout: () => vo
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-semibold text-slate-950">账号信息</h2>
         <div className="mt-5 space-y-4">
-          <ReadonlyField label="昵称" value="本地用户" />
+          <ReadonlyField label="昵称" value="当前用户" />
           <ReadonlyField label="当前套餐" value={user.planName} />
           <ReadonlyField label="邮箱" value={user.email} />
         </div>
       </div>
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <h2 className="text-lg font-semibold text-slate-950">安全设置</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-500">当前账号数据仅保存在本机浏览器 localStorage 中。</p>
+        <p className="mt-3 text-sm leading-7 text-slate-500">你的账户额度、使用记录和工具调用结果已由云端数据库保存。你可以在不同设备登录并查看历史使用情况。</p>
         <button
           type="button"
           onClick={onLogout}
@@ -454,6 +853,15 @@ function StatCard({ label, value, note }: { label: string; value: string; note: 
       <p className="mt-3 text-2xl font-semibold text-slate-950">{value}</p>
       <p className="mt-2 text-xs leading-5 text-slate-500">{note}</p>
     </article>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-950">{value}</p>
+    </div>
   );
 }
 
@@ -489,7 +897,8 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<Rea
 }
 
 function StatusBadge({ status }: { status: string }) {
-  return <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{status}</span>;
+  const success = status === "已完成";
+  return <span className={success ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" : "rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700"}>{status}</span>;
 }
 
 function ReadonlyField({ label, value }: { label: string; value: string }) {
@@ -549,6 +958,18 @@ function PaymentPlaceholderModal({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
+}
+
+function getDateFrom(rangeDays: RecordRange) {
+  if (rangeDays === "all") return "";
+  const date = new Date();
+  date.setDate(date.getDate() - rangeDays + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function rangeLabel(rangeDays: RangeDays) {
+  if (rangeDays === "all") return "全部";
+  return `近 ${rangeDays} 天`;
 }
 
 function formatDateTime(value: string) {

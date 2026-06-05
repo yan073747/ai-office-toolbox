@@ -4,13 +4,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-// V1.1 server auth path. The existing V1.0 localStorage user system remains a
-// demo-only frontend path and is not suitable for production security.
-// Production must use server-side auth, hashed passwords, httpOnly cookies,
-// backend payment webhooks, and server-side quota checks.
+// Server-side auth uses hashed passwords and httpOnly signed cookies.
+// Payment webhooks and quota changes must stay server-side.
 
 export const SESSION_COOKIE_NAME = "office_ai_session";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const SHORT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
+const REMEMBER_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const DEFAULT_FREE_QUOTA = 5;
 
 export type ServerUser = {
@@ -27,6 +26,7 @@ export type RegisterInput = {
 export type LoginInput = {
   email?: string;
   password?: string;
+  rememberMe?: boolean;
 };
 
 export type AuthResult = {
@@ -62,11 +62,11 @@ function signPayload(payload: string) {
   return createHmac("sha256", getSessionSecret()).update(payload).digest("base64url");
 }
 
-function createSessionToken(userId: string) {
+function createSessionToken(userId: string, maxAgeSeconds: number) {
   const payload = encodeBase64Url(
     JSON.stringify({
       userId,
-      expiresAt: Date.now() + SESSION_MAX_AGE_SECONDS * 1000
+      expiresAt: Date.now() + maxAgeSeconds * 1000
     })
   );
   return `${payload}.${signPayload(payload)}`;
@@ -107,13 +107,14 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, rememberMe = false) {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, createSessionToken(userId), {
+  const maxAge = rememberMe ? REMEMBER_SESSION_MAX_AGE_SECONDS : SHORT_SESSION_MAX_AGE_SECONDS;
+  cookieStore.set(SESSION_COOKIE_NAME, createSessionToken(userId, maxAge), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
+    maxAge,
     secure: process.env.NODE_ENV === "production"
   });
 }
@@ -187,7 +188,7 @@ export async function registerUserServer(input: RegisterInput): Promise<AuthResu
       return nextUser;
     });
 
-    await createSession(user.id);
+    await createSession(user.id, true);
     return { ok: true, status: 200, user };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -217,7 +218,7 @@ export async function loginUserServer(input: LoginInput): Promise<AuthResult> {
     return { ok: false, status: 401, message: "邮箱或密码错误。" };
   }
 
-  await createSession(user.id);
+  await createSession(user.id, Boolean(input.rememberMe));
   return {
     ok: true,
     status: 200,

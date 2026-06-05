@@ -1,10 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
-// Server quota skeleton for V1.1. V1.0 localStorage quota remains demo-only and
-// is not a production security boundary. Production tool execution must check
-// quota on the server before calling Dify, then consume quota on the server only
-// after a successful tool result. Payment success must come from verified backend
-// webhooks, never from frontend state.
+// Production tool execution checks quota on the server before calling Dify, then
+// consumes quota on the server only after a successful tool result. Payment
+// success must come from verified backend webhooks, never from frontend state.
 
 const DEFAULT_FREE_QUOTA = 5;
 const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
@@ -95,8 +93,8 @@ export async function canUseToolServer(userId: string | null): Promise<ServerToo
 }
 
 export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: ServerToolInfo) {
-  // Future tool API integration point. Keep this transaction server-side to
-  // prevent frontend tampering and concurrent double spending.
+  // Keep this transaction server-side to prevent frontend tampering and
+  // concurrent double spending.
   return prisma.$transaction(async (tx) => {
     const quota = await tx.userQuota.findUnique({ where: { userId } });
     if (!quota || quota.remainingQuota <= 0) {

@@ -12,6 +12,7 @@ type FormValues = {
   account: string;
   password: string;
   confirmPassword: string;
+  rememberMe: boolean;
 };
 
 type FormErrors = Partial<Record<keyof FormValues | "form", string>>;
@@ -24,7 +25,8 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [values, setValues] = useState<FormValues>({
     account: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    rememberMe: false
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,12 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
     setSuccessMessage("");
   }
 
+  function updateChecked(name: keyof FormValues, value: boolean) {
+    setValues((current) => ({ ...current, [name]: value }));
+    setErrors((current) => ({ ...current, form: undefined }));
+    setSuccessMessage("");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSuccessMessage("");
@@ -55,11 +63,12 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
 
     try {
       if (isLogin) {
-        loginUser(values.account, values.password);
+        await loginUser(values.account, values.password, values.rememberMe);
       } else {
-        registerUser(values.account, values.password, values.confirmPassword);
+        await registerUser(values.account, values.password, values.confirmPassword);
       }
       setSuccessMessage(isLogin ? "登录成功，正在返回首页。" : "注册成功，正在返回首页。");
+      router.refresh();
       router.push("/");
     } catch (error) {
       setErrors({
@@ -146,10 +155,15 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
                 {isLogin ? (
                   <div className="flex items-center justify-between text-sm">
                     <label className="inline-flex items-center gap-2 text-slate-500">
-                      <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      <input
+                        type="checkbox"
+                        checked={values.rememberMe}
+                        onChange={(event) => updateChecked("rememberMe", event.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
                       记住我
                     </label>
-                    <Link href="/login" className="font-semibold text-slate-700 transition hover:text-blue-700">
+                    <Link href="/forgot-password" className="font-semibold text-slate-700 transition hover:text-blue-700">
                       忘记密码
                     </Link>
                   </div>

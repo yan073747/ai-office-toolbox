@@ -93,7 +93,14 @@ const toolConfigs: Record<string, ToolConfig> = {
     sizeLimit: "建议 20MB 以内，暂不支持扫描件 OCR",
     submitLabel: "开始总结",
     emptyText: "PDF 总结结果会显示在这里",
-    fields: [],
+    fields: [
+      {
+        name: "summary_focus",
+        label: "总结要求（可选）",
+        type: "textarea",
+        placeholder: "例如：重点总结结论和建议、风险点、待办事项"
+      }
+    ],
     sample: "## PDF 总结示例\n\n### 核心摘要\n文档主要围绕项目背景、执行计划和潜在风险展开。\n\n### 重点内容\n- 项目目标清晰，但资源排期需要进一步确认。\n- 风险集中在交付时间和跨部门协作。\n\n### 建议\n优先明确负责人、时间节点和验收标准。"
   },
   contract: {
@@ -150,6 +157,12 @@ const toolConfigs: Record<string, ToolConfig> = {
         type: "select",
         options: ["正式汇报", "简洁版", "详细版", "领导汇报", "数据型"],
         defaultValue: "正式汇报"
+      },
+      {
+        name: "user_requirement",
+        label: "补充要求（可选）",
+        type: "textarea",
+        placeholder: "例如：写成领导汇报风格，重点突出风险和下一步计划"
       }
     ],
     sample: "## 周报示例\n\n### 本周完成\n- 完成客户资料整理与重点客户跟进。\n- 梳理销售数据并输出异常情况说明。\n\n### 遇到问题\n- 部分数据口径不一致，需要进一步确认。\n\n### 下周计划\n- 完成数据复盘并推进重点客户转化。"
@@ -186,6 +199,12 @@ const toolConfigs: Record<string, ToolConfig> = {
         type: "select",
         options: ["商务汇报", "科技风", "极简风", "教育培训", "产品发布", "营销方案", "学术答辩"],
         defaultValue: "商务汇报"
+      },
+      {
+        name: "user_requirement",
+        label: "补充要求（可选）",
+        type: "textarea",
+        placeholder: "例如：突出产品商业价值、面向投资人、必须包含竞品对比"
       }
     ],
     sample: "## PPT 大纲示例\n\n1. 封面：AI 办公产品商业计划书\n2. 市场背景：办公效率工具需求增长\n3. 用户痛点：重复整理、写作、分析成本高\n4. 产品方案：七类 AI 办公工具\n5. 商业模式：按次、套餐、企业定制\n6. 总结：落地计划与下一步目标"
@@ -213,6 +232,12 @@ const toolConfigs: Record<string, ToolConfig> = {
         label: "提取待办事项",
         type: "checkbox",
         defaultValue: "true"
+      },
+      {
+        name: "user_requirement",
+        label: "整理要求（可选）",
+        type: "textarea",
+        placeholder: "例如：提取待办事项和负责人，按优先级排序"
       }
     ],
     sample: "## 会议纪要示例\n\n### 会议结论\n- 本周优先推进产品首页改版和工具页测试。\n\n### 待办事项\n- 设计：周三前完成首页视觉调整。\n- 开发：周五前完成工具页联调。\n- 运营：准备首批用户反馈表。"
@@ -248,6 +273,12 @@ const toolConfigs: Record<string, ToolConfig> = {
         type: "select",
         options: ["礼貌专业", "高情商", "简洁直接", "亲切自然", "强硬催促", "商务正式"],
         defaultValue: "礼貌专业"
+      },
+      {
+        name: "user_requirement",
+        label: "补充要求（可选）",
+        type: "textarea",
+        placeholder: "例如：语气更委婉但明确催促，对方读完知道需要尽快回复"
       }
     ],
     sample: "## 邮件润色示例\n\n尊敬的同事您好：\n\n关于本周项目进度，请各位于周五 18:00 前完成相关材料提交。如有特殊情况，请提前与项目负责人沟通。\n\n感谢配合。"
@@ -302,7 +333,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
       return;
     }
 
-    const toolUseCheck = canUseTool();
+    const toolUseCheck = await canUseTool();
     if (!toolUseCheck.canUse) {
       if (toolUseCheck.reason === "quota_empty") setQuotaOpen(true);
       setError(toolUseCheck.message);
@@ -333,7 +364,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
       }
 
       setResult(data.result);
-      consumeQuotaAfterSuccess({
+      await consumeQuotaAfterSuccess({
         toolId: tool.id,
         toolName: tool.name,
         inputType: getInputType(tool)
@@ -780,13 +811,16 @@ function validateToolInput(tool: ToolConfig, values: Record<string, string>, sel
 }
 
 function buildRequestBody(tool: ToolConfig, values: Record<string, string>, selectedFile: File | null) {
+  const requirement = getUserRequirement(tool, values);
+
   if (tool.kind === "file" || tool.kind === "hybrid") {
     const formData = new FormData();
     formData.append("tool_type", tool.toolType);
+    formData.append("user_requirement", requirement);
     if (selectedFile) formData.append("files", selectedFile);
 
     if (tool.id === "pdf") {
-      formData.append("text_input", values.text_input || "");
+      formData.append("text_input", values.summary_focus || "");
     } else if (tool.id === "contract") {
       formData.append("text_input", values.contract_text || "");
     } else if (tool.id === "excel") {
@@ -800,6 +834,7 @@ function buildRequestBody(tool: ToolConfig, values: Record<string, string>, sele
     return JSON.stringify({
       tool_type: tool.toolType,
       text_input: values.work_content || "",
+      user_requirement: requirement,
       report_type: values.report_type || "",
       report_style: values.report_style || ""
     });
@@ -812,23 +847,40 @@ function buildRequestBody(tool: ToolConfig, values: Record<string, string>, sele
       ppt_topic: values.topic || "",
       ppt_style: values.style || "",
       ppt_pages: Number.isFinite(pages) ? pages : 0,
-      text_input: ""
+      text_input: "",
+      user_requirement: requirement
     });
   }
 
   if (tool.id === "meeting") {
     return JSON.stringify({
       tool_type: tool.toolType,
-      text_input: `${values.meeting_content || ""}\n\n是否提取待办事项：${values.extract_todos === "true" ? "是" : "否"}`
+      text_input: `${values.meeting_content || ""}\n\n是否提取待办事项：${values.extract_todos === "true" ? "是" : "否"}`,
+      user_requirement: requirement
     });
   }
 
   return JSON.stringify({
     tool_type: tool.toolType,
     text_input: values.original_content || "",
+    user_requirement: requirement,
     communication_type: values.communication_type || "",
     communication_tone: values.communication_tone || ""
   });
+}
+
+function getUserRequirement(tool: ToolConfig, values: Record<string, string>) {
+  if (tool.id === "excel") return values.analysis_goal || "";
+  if (tool.id === "pdf") return values.summary_focus || "";
+  if (tool.id === "contract") return values.contract_text || "";
+  if (tool.id === "report") return values.user_requirement || "";
+  if (tool.id === "ppt") return values.user_requirement || "";
+  if (tool.id === "meeting") {
+    const requirement = values.user_requirement || "";
+    return requirement || (values.extract_todos === "true" ? "提取待办事项" : "");
+  }
+  if (tool.id === "polish") return values.user_requirement || "";
+  return values.user_requirement || "";
 }
 
 function normalizeErrorMessage(message: unknown) {

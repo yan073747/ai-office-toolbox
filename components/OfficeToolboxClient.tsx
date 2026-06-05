@@ -68,7 +68,14 @@ const tools: ToolConfig[] = [
       accept: ".xlsx,.xls,.csv",
       title: "上传 Excel 文件，AI 将自动分析数据结构、异常值、趋势与业务洞察。"
     },
-    fields: []
+    fields: [
+      {
+        type: "textarea",
+        name: "analysis_goal",
+        label: "分析目标（可选）",
+        placeholder: "例如：分析销售趋势，顺便检查是否存在计算机网络技术的学生"
+      }
+    ]
   },
   {
     type: "pdf",
@@ -138,6 +145,12 @@ const tools: ToolConfig[] = [
         label: "报告风格",
         options: ["正式汇报", "简洁版", "详细版", "领导汇报", "数据型"],
         required: true
+      },
+      {
+        type: "textarea",
+        name: "user_requirement",
+        label: "补充要求（可选）",
+        placeholder: "例如：写成领导汇报风格，重点突出风险和下一步计划"
       }
     ]
   },
@@ -193,6 +206,12 @@ const tools: ToolConfig[] = [
         label: "会议内容输入",
         placeholder: "请输入会议记录、聊天记录或语音转文字内容",
         required: true
+      },
+      {
+        type: "textarea",
+        name: "user_requirement",
+        label: "整理要求（可选）",
+        placeholder: "例如：提取待办事项和负责人，按优先级排序"
       }
     ]
   },
@@ -224,6 +243,12 @@ const tools: ToolConfig[] = [
         label: "沟通语气",
         options: ["礼貌专业", "高情商", "简洁直接", "亲切自然", "强硬催促", "商务正式"],
         required: true
+      },
+      {
+        type: "textarea",
+        name: "user_requirement",
+        label: "补充要求（可选）",
+        placeholder: "例如：语气更委婉但明确催促，对方读完知道需要尽快回复"
       }
     ]
   }
@@ -342,7 +367,7 @@ export default function OfficeToolboxClient() {
       return;
     }
 
-    const toolUseCheck = canUseTool();
+    const toolUseCheck = await canUseTool();
     if (!toolUseCheck.canUse) {
       setError(toolUseCheck.message);
       return;
@@ -367,7 +392,7 @@ export default function OfficeToolboxClient() {
       lastSubmissionRef.current = submission;
       setResult(response.result);
       setResultToolType(submission.toolType);
-      consumeQuotaAfterSuccess({
+      await consumeQuotaAfterSuccess({
         toolId: submission.toolType,
         toolName: targetToolName(submission.toolType),
         inputType: targetInputType(submission.toolType)
@@ -392,7 +417,7 @@ export default function OfficeToolboxClient() {
     setIsLoading(true);
     setLoadingStep(0);
 
-    const toolUseCheck = canUseTool();
+    const toolUseCheck = await canUseTool();
     if (!toolUseCheck.canUse) {
       setError(toolUseCheck.message);
       setIsLoading(false);
@@ -409,7 +434,7 @@ export default function OfficeToolboxClient() {
 
       setResult(response.result);
       setResultToolType(lastSubmissionRef.current.toolType);
-      consumeQuotaAfterSuccess({
+      await consumeQuotaAfterSuccess({
         toolId: lastSubmissionRef.current.toolType,
         toolName: targetToolName(lastSubmissionRef.current.toolType),
         inputType: targetInputType(lastSubmissionRef.current.toolType)
@@ -572,29 +597,35 @@ export default function OfficeToolboxClient() {
 
   function createPayload(submission: { toolType: ToolType; values: Record<string, string>; file?: File | null }) {
     const value = submission.values;
+    const requirement = getUserRequirement(submission.toolType, value);
 
     switch (submission.toolType) {
       case "excel":
         return {
           tool_type: toolTypeMap.excel.value,
-          files: submission.file ? [submission.file.name] : []
+          files: submission.file ? [submission.file.name] : [],
+          text_input: value.analysis_goal || "",
+          user_requirement: requirement
         };
       case "pdf":
         return {
           tool_type: toolTypeMap.pdf.value,
           files: submission.file ? [submission.file.name] : [],
-          text_input: value.notes || ""
+          text_input: value.notes || "",
+          user_requirement: requirement
         };
       case "contract":
         return {
           tool_type: toolTypeMap.contract.value,
           files: submission.file ? [submission.file.name] : [],
-          text_input: value.focus || ""
+          text_input: value.focus || "",
+          user_requirement: requirement
         };
       case "report":
         return {
           tool_type: toolTypeMap.report.value,
           text_input: value.work_content || "",
+          user_requirement: requirement,
           report_type: value.report_type || "",
           report_style: value.report_style || ""
         };
@@ -605,20 +636,42 @@ export default function OfficeToolboxClient() {
           ppt_topic: value.topic || "",
           ppt_style: value.style || "",
           ppt_pages: Number.isFinite(pptPages) ? pptPages : 0,
-          text_input: value.extra_content || ""
+          text_input: value.extra_content || "",
+          user_requirement: requirement
         };
       case "meeting":
         return {
           tool_type: toolTypeMap.meeting.value,
-          text_input: value.meeting_content || ""
+          text_input: value.meeting_content || "",
+          user_requirement: requirement
         };
       case "polish":
         return {
           tool_type: toolTypeMap.polish.value,
           text_input: value.original_content || "",
+          user_requirement: requirement,
           communication_type: value.communication_type || "",
           communication_tone: value.communication_tone || ""
         };
+    }
+  }
+
+  function getUserRequirement(toolType: ToolType, value: Record<string, string>) {
+    switch (toolType) {
+      case "excel":
+        return value.analysis_goal || "";
+      case "pdf":
+        return value.notes || "";
+      case "contract":
+        return value.focus || "";
+      case "report":
+        return value.user_requirement || "";
+      case "ppt":
+        return value.extra_content || value.style || "";
+      case "meeting":
+        return value.user_requirement || "提取会议结论、待办事项和负责人";
+      case "polish":
+        return value.user_requirement || "";
     }
   }
 

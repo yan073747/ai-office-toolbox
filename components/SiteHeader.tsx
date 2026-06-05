@@ -35,12 +35,12 @@ export default function SiteHeader() {
     };
   }, []);
 
-  function refreshUser() {
-    setUser(getCurrentUser());
+  async function refreshUser() {
+    setUser(await getCurrentUser());
   }
 
-  function handleLogout() {
-    logoutUser();
+  async function handleLogout() {
+    await logoutUser();
     setUser(null);
     setOpen(false);
     router.push("/");

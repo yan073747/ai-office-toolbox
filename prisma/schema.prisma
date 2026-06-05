@@ -1,27 +1,42 @@
-// Local development database schema for AI Office Toolbox V1.1.
-// The current V1.0 MVP frontend still uses localStorage. This schema is only
-// for the production-ready backend path that will be wired in later.
+// Production database schema for AI Office Toolbox.
+// Use a persistent Postgres database in production, such as Vercel Postgres,
+// Supabase, or Neon. SQLite is not suitable for Vercel production persistence.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  passwordHash String        @map("password_hash")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  id           String               @id @default(cuid())
+  email        String               @unique
+  passwordHash String               @map("password_hash")
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
   quota        UserQuota?
   usageRecords UsageRecord[]
   orders       Order[]
+  resetTokens  PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model UserQuota {
@@ -37,33 +52,60 @@ model UserQuota {
 }
 
 model UsageRecord {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  toolId    String   @map("tool_id")
-  toolName  String   @map("tool_name")
-  inputType String   @map("input_type")
-  status    String
-  quotaUsed Int      @map("quota_used")
-  createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  toolId       String   @map("tool_id")
+  toolName     String   @map("tool_name")
+  inputType    String   @map("input_type")
+  status       String
+  quotaUsed    Int      @map("quota_used")
+  errorMessage String?  @map("error_message")
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([toolId])
   @@map("usage_records")
 }
 
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  event     String
+  level     String   @default("info")
+  ip        String?
+  userAgent String?
+  message   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([event, createdAt])
+  @@map("audit_logs")
+}
+
+model RateLimitEvent {
+  id        String   @id @default(cuid())
+  key       String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([key, action, createdAt])
+  @@map("rate_limit_events")
+}
+
 model Order {
-  id               String    @id @default(cuid())
-  userId           String    @map("user_id")
-  planName         String    @map("plan_name")
-  amount           Decimal
-  quotaAmount      Int       @map("quota_amount")
-  paymentProvider  String    @map("payment_provider")
-  paymentStatus    String    @default("pending") @map("payment_status")
-  paymentTradeNo   String?   @map("payment_trade_no")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  paidAt           DateTime? @map("paid_at")
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  planName        String    @map("plan_name")
+  amount          Decimal
+  quotaAmount     Int       @map("quota_amount")
+  paymentProvider String    @map("payment_provider")
+  paymentStatus   String    @default("pending") @map("payment_status")
+  paymentTradeNo  String?   @map("payment_trade_no")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  paidAt          DateTime? @map("paid_at")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([paymentStatus])
