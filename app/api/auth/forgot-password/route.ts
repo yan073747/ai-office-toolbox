@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 import { hashAuditValue, writeAuditLog } from "@/lib/audit-log";
-import { getAppBaseUrl, getEmailConfigStatus, sendEmail } from "@/lib/email";
+import { getEmailConfigStatus, sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getIpHash, getRateLimitKey, isRateLimited, recordRateLimitEvent } from "@/lib/rate-limit";
 
-const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+const RESET_CODE_TTL_MS = 15 * 60 * 1000;
 const RESET_RESEND_COOLDOWN_MS = 60 * 1000;
-const GENERIC_MESSAGE = "如果该邮箱已注册，我们会发送重置密码邮件。";
+const GENERIC_MESSAGE = "如果该邮箱已注册，我们会发送验证码邮件。";
 const PASSWORD_RESET_ACTION = "auth.password_reset.requested";
 const EMAIL_RESET_WINDOW_MS = 60 * 1000;
 const IP_RESET_WINDOW_MS = 10 * 60 * 1000;
@@ -20,8 +20,12 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function hashToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
+function createResetCode() {
+  return String(randomInt(100000, 1000000));
+}
+
+function hashResetCode(email: string, code: string) {
+  return createHash("sha256").update(`${email}:${code}`).digest("hex");
 }
 
 export async function POST(request: Request) {
@@ -116,8 +120,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
   }
 
-  const token = randomBytes(32).toString("base64url");
-  const resetUrl = `${getAppBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+  const code = createResetCode();
 
   await prisma.passwordResetToken.updateMany({
     where: {
@@ -132,17 +135,17 @@ export async function POST(request: Request) {
   const resetToken = await prisma.passwordResetToken.create({
     data: {
       userId: user.id,
-      tokenHash: hashToken(token),
-      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS)
+      tokenHash: hashResetCode(user.email, code),
+      expiresAt: new Date(Date.now() + RESET_CODE_TTL_MS)
     }
   });
 
   try {
     await sendEmail({
       to: user.email,
-      subject: "AI办公工具箱密码重置",
-      text: `请在 30 分钟内打开以下链接重置密码：${resetUrl}`,
-      html: `<p>请在 30 分钟内打开以下链接重置密码：</p><p><a href="${resetUrl}">重置密码</a></p><p>如果不是你本人操作，可以忽略这封邮件。</p>`
+      subject: "AI办公工具箱密码重置验证码",
+      text: `你的密码重置验证码是：${code}。验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。`,
+      html: `<p>你的密码重置验证码是：</p><p style="font-size:24px;font-weight:700;letter-spacing:4px;">${code}</p><p>验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。</p>`
     });
   } catch (error) {
     console.error("Password reset email failed:", error instanceof Error ? error.message : "unknown");
