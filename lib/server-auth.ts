@@ -45,9 +45,13 @@ function isValidEmail(email: string) {
 }
 
 function getSessionSecret() {
-  // Local development fallback only. Production should set AUTH_SESSION_SECRET
-  // and ideally use encrypted/signed sessions, JWT rotation, or Auth.js/NextAuth.
-  return process.env.AUTH_SESSION_SECRET || "local-dev-session-secret-change-before-production";
+  const secret = process.env.AUTH_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SESSION_SECRET is required in production.");
+  }
+  // Local development fallback only. Production must set AUTH_SESSION_SECRET.
+  return "local-dev-session-secret-change-before-production";
 }
 
 function encodeBase64Url(value: string) {

@@ -36,6 +36,12 @@ PPT_WORKFLOW_ID=
 
 `.env.local` 已在 `.gitignore` 中忽略，不要提交真实 API Key。
 
+## Vercel Preview 数据库说明
+
+Prisma 只读取 `DATABASE_URL`，不会自动读取 `DATABASE_URL_PREVIEW`。
+
+如果需要让 Vercel Preview 部署连接 Neon Preview 分支，请在 Vercel 的 Preview 环境变量中配置名为 `DATABASE_URL` 的变量，并将它指向 Preview Neon 数据库连接串。`DATABASE_URL_PREVIEW` 可以保留作人工区分或备份，但不会被 Prisma 自动使用。
+
 ## 页面与接口
 
 - `/tools/excel` 调用 `/api/excel`
