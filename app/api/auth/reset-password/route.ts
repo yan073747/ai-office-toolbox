@@ -23,25 +23,34 @@ export async function POST(request: Request) {
   const code = String(body.code || "").trim();
   const password = String(body.password || "");
   const confirmPassword = String(body.confirmPassword || password);
-  const usesCode = Boolean(email && code);
+  const isCodeFlow = Boolean(email || code);
 
-  if (!token && !usesCode) {
+  if (!token && !isCodeFlow) {
     await writeAuditLog({
       request,
       event: "auth.password_reset.token_invalid",
       level: "warn",
       metadata: { reason: "missing" }
     });
-    return NextResponse.json({ ok: false, message: "验证码无效或已过期。" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "请输入验证码。" }, { status: 400 });
   }
-  if (usesCode && !/^\d{6}$/.test(code)) {
+  if (isCodeFlow && !code) {
+    await writeAuditLog({
+      request,
+      event: "auth.password_reset.token_invalid",
+      level: "warn",
+      metadata: { reason: "missing_code" }
+    });
+    return NextResponse.json({ ok: false, message: "请输入验证码。" }, { status: 400 });
+  }
+  if (isCodeFlow && !/^\d{6}$/.test(code)) {
     await writeAuditLog({
       request,
       event: "auth.password_reset.token_invalid",
       level: "warn",
       metadata: { reason: "invalid_code_format" }
     });
-    return NextResponse.json({ ok: false, message: "验证码无效或已过期。" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "验证码错误请重新输入。" }, { status: 400 });
   }
   if (password.length < 6) {
     return NextResponse.json({ ok: false, message: "密码至少需要 6 位。" }, { status: 400 });
@@ -50,21 +59,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "两次输入的密码不一致。" }, { status: 400 });
   }
 
-  const user = usesCode
+  const user = isCodeFlow
     ? await prisma.user.findUnique({
         where: { email },
         select: { id: true }
       })
     : null;
 
+  if (isCodeFlow && !user) {
+    await writeAuditLog({
+      request,
+      event: "auth.password_reset.token_invalid",
+      level: "warn",
+      metadata: { reason: "email_not_found" }
+    });
+    return NextResponse.json({ ok: false, message: "该邮箱未注册，请先去注册。" }, { status: 404 });
+  }
+
+  const tokenHash = isCodeFlow ? hashResetCode(email, code) : hashToken(token);
   const resetToken = await prisma.passwordResetToken.findFirst({
     where: {
-      tokenHash: usesCode ? hashResetCode(email, code) : hashToken(token),
-      ...(usesCode ? { userId: user?.id || "__missing_user__" } : {}),
-      usedAt: null,
-      expiresAt: { gt: new Date() }
+      tokenHash,
+      ...(isCodeFlow ? { userId: user?.id || "__missing_user__" } : {}),
+      usedAt: null
     },
-    select: { id: true, userId: true }
+    select: { id: true, userId: true, expiresAt: true }
   });
 
   if (!resetToken) {
@@ -74,7 +93,18 @@ export async function POST(request: Request) {
       level: "warn",
       metadata: { reason: "invalid_or_expired" }
     });
-    return NextResponse.json({ ok: false, message: "重置链接无效或已过期。" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: isCodeFlow ? "验证码错误请重新输入。" : "重置链接无效或已过期。" }, { status: 400 });
+  }
+
+  if (resetToken.expiresAt <= new Date()) {
+    await writeAuditLog({
+      request,
+      userId: resetToken.userId,
+      event: "auth.password_reset.token_invalid",
+      level: "warn",
+      metadata: { reason: "expired" }
+    });
+    return NextResponse.json({ ok: false, message: isCodeFlow ? "验证码已过期，请重新获取新的验证码。" : "重置链接无效或已过期。" }, { status: 400 });
   }
 
   await prisma.$transaction([

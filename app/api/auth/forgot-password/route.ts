@@ -7,7 +7,7 @@ import { getIpHash, getRateLimitKey, isRateLimited, recordRateLimitEvent } from 
 
 const RESET_CODE_TTL_MS = 15 * 60 * 1000;
 const RESET_RESEND_COOLDOWN_MS = 60 * 1000;
-const GENERIC_MESSAGE = "如果该邮箱已注册，我们会发送验证码邮件。";
+const CODE_SENT_MESSAGE = "已发送验证码";
 const PASSWORD_RESET_ACTION = "auth.password_reset.requested";
 const EMAIL_RESET_WINDOW_MS = 60 * 1000;
 const IP_RESET_WINDOW_MS = 10 * 60 * 1000;
@@ -33,12 +33,29 @@ export async function POST(request: Request) {
   const email = normalizeEmail(String(body.email || ""));
 
   if (!email || !isValidEmail(email)) {
-    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+    return NextResponse.json({ ok: false, message: "请输入有效的邮箱。" }, { status: 400 });
   }
   const emailHash = hashAuditValue(email);
   const ipHash = getIpHash(request);
   const emailKey = getRateLimitKey("email", email);
   const ipKey = getRateLimitKey("ip", ipHash);
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true }
+  });
+
+  await writeAuditLog({
+    request,
+    userId: user?.id,
+    event: "auth.password_reset.requested",
+    metadata: { emailHash }
+  });
+
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "该邮箱未注册，请先去注册。" }, { status: 404 });
+  }
+
   const [emailLimit, ipLimit] = await Promise.all([
     isRateLimited({
       key: emailKey,
@@ -59,6 +76,7 @@ export async function POST(request: Request) {
       request,
       event: "auth.password_reset.rate_limited",
       level: "warn",
+      userId: user.id,
       metadata: {
         emailHash,
         ipHash,
@@ -66,29 +84,13 @@ export async function POST(request: Request) {
         status: 200
       }
     });
-    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+    return NextResponse.json({ ok: true, message: CODE_SENT_MESSAGE });
   }
 
   await Promise.all([
     recordRateLimitEvent(emailKey, PASSWORD_RESET_ACTION),
     recordRateLimitEvent(ipKey, PASSWORD_RESET_ACTION)
   ]);
-
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: { id: true, email: true }
-  });
-
-  await writeAuditLog({
-    request,
-    userId: user?.id,
-    event: "auth.password_reset.requested",
-    metadata: { emailHash }
-  });
-
-  if (!user) {
-    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
-  }
 
   const emailConfig = getEmailConfigStatus();
   if (!emailConfig.ready) {
@@ -117,7 +119,7 @@ export async function POST(request: Request) {
   });
 
   if (recentToken) {
-    return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+    return NextResponse.json({ ok: true, message: CODE_SENT_MESSAGE });
   }
 
   const code = createResetCode();
@@ -167,5 +169,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "邮件服务暂时不可用，请稍后重试。" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
+  return NextResponse.json({ ok: true, message: CODE_SENT_MESSAGE });
 }

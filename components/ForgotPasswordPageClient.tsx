@@ -4,8 +4,6 @@ import { Loader2, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-const genericMessage = "如果该邮箱已注册，我们会发送验证码邮件。";
-
 export default function ForgotPasswordPageClient() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -37,9 +35,10 @@ export default function ForgotPasswordPageClient() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data?.ok === false) {
         setError(typeof data?.message === "string" ? data.message : "邮件服务暂时不可用，请稍后重试。");
+        setCodeSent(false);
         return;
       }
-      setMessage(genericMessage);
+      setMessage(typeof data?.message === "string" ? data.message : "已发送验证码");
       setCodeSent(true);
     } catch {
       setError("邮件服务暂时不可用，请稍后重试。");
@@ -57,8 +56,12 @@ export default function ForgotPasswordPageClient() {
       setError("请输入邮箱。");
       return;
     }
+    if (!code.trim()) {
+      setError("请输入验证码。");
+      return;
+    }
     if (!/^\d{6}$/.test(code.trim())) {
-      setError("请输入 6 位验证码。");
+      setError("验证码错误请重新输入。");
       return;
     }
     if (password.length < 6) {
@@ -79,7 +82,7 @@ export default function ForgotPasswordPageClient() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data?.ok === false) {
-        setError(typeof data?.message === "string" ? data.message : "验证码无效或已过期。");
+        setError(typeof data?.message === "string" ? data.message : "验证码错误请重新输入。");
         return;
       }
       setMessage("密码已重置，请返回登录。");
