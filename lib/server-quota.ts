@@ -1,11 +1,8 @@
+import { FREE_USES_PER_TOOL, TOOL_DEFINITIONS, getPlanDefinition, getToolDefinition } from "@/lib/plans";
 import { prisma } from "@/lib/prisma";
 
-// Production tool execution checks quota on the server before calling Dify, then
-// consumes quota on the server only after a successful tool result. Payment
-// success must come from verified backend webhooks, never from frontend state.
-
-const DEFAULT_FREE_QUOTA = 5;
-const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
+export const FREE_LIMIT_REACHED_CODE = "FREE_LIMIT_REACHED";
+export const FREE_LIMIT_REACHED_MESSAGE = "免费次数已用完，请购买套餐继续使用";
 
 export type ServerQuota = {
   userId: string;
@@ -15,17 +12,47 @@ export type ServerQuota = {
   updatedAt: string;
 };
 
-export type ServerToolUseCheck = {
-  canUse: boolean;
-  reason: "not_logged_in" | "quota_empty" | "ok";
-  message: string;
-  quota?: ServerQuota;
-};
-
 export type ServerToolInfo = {
   toolId: string;
   toolName: string;
   inputType: string;
+};
+
+export type ToolFreeUsage = {
+  toolId: string;
+  toolName: string;
+  used: number;
+  total: number;
+  remaining: number;
+};
+
+export type ActiveSubscriptionSummary = {
+  id: string;
+  plan: string;
+  planName: string;
+  status: string;
+  credits: number;
+  unlimited: boolean;
+  expiresAt: string | null;
+};
+
+export type ToolAccessSource = "free" | "subscription";
+
+export type ServerToolAccess = {
+  source: ToolAccessSource;
+  subscriptionId?: string;
+  unlimited?: boolean;
+};
+
+export type ServerToolUseCheck = {
+  canUse: boolean;
+  reason: "not_logged_in" | "free_limit_reached" | "ok";
+  code?: string;
+  message: string;
+  quota?: ServerQuota;
+  freeUsage?: ToolFreeUsage[];
+  subscription?: ActiveSubscriptionSummary | null;
+  access?: ServerToolAccess;
 };
 
 export type ServerOrderInfo = {
@@ -34,80 +61,185 @@ export type ServerOrderInfo = {
   paymentTradeNo?: string;
 };
 
-function toServerQuota(quota: {
-  userId: string;
-  totalQuota: number;
-  usedQuota: number;
-  remainingQuota: number;
-  updatedAt: Date;
-}): ServerQuota {
+const NOT_LOGGED_IN_MESSAGE = "请先登录后使用";
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function toSubscriptionSummary(subscription: {
+  id: string;
+  plan: string;
+  status: string;
+  credits: number;
+  expiresAt: Date | null;
+}): ActiveSubscriptionSummary {
+  const plan = getPlanDefinition(subscription.plan);
   return {
-    userId: quota.userId,
-    totalQuota: quota.totalQuota,
-    usedQuota: quota.usedQuota,
-    remainingQuota: quota.remainingQuota,
-    updatedAt: quota.updatedAt.toISOString()
+    id: subscription.id,
+    plan: subscription.plan,
+    planName: plan?.name || subscription.plan,
+    status: subscription.status,
+    credits: subscription.credits,
+    unlimited: Boolean(plan?.unlimited || subscription.credits < 0),
+    expiresAt: subscription.expiresAt ? subscription.expiresAt.toISOString() : null
   };
 }
 
-export async function getServerQuota(userId: string): Promise<ServerQuota> {
-  const quota = await prisma.userQuota.upsert({
-    where: { userId },
-    create: {
+export async function getToolFreeUsage(userId: string): Promise<ToolFreeUsage[]> {
+  const toolIds = TOOL_DEFINITIONS.map((tool) => tool.toolId);
+  const grouped = await prisma.usageRecord.groupBy({
+    by: ["toolId"],
+    where: {
       userId,
-      totalQuota: DEFAULT_FREE_QUOTA,
-      usedQuota: 0,
-      remainingQuota: DEFAULT_FREE_QUOTA
+      status: "success",
+      toolId: {
+        in: toolIds
+      }
     },
-    update: {}
+    _count: {
+      _all: true
+    }
   });
+  const countByTool = new Map(grouped.map((item) => [item.toolId, item._count._all]));
 
-  return toServerQuota(quota);
+  return TOOL_DEFINITIONS.map((tool) => {
+    const used = Math.min(countByTool.get(tool.toolId) || 0, FREE_USES_PER_TOOL);
+    return {
+      toolId: tool.toolId,
+      toolName: tool.toolName,
+      used,
+      total: FREE_USES_PER_TOOL,
+      remaining: Math.max(0, FREE_USES_PER_TOOL - used)
+    };
+  });
 }
 
-export async function canUseToolServer(userId: string | null): Promise<ServerToolUseCheck> {
+export async function getActiveSubscription(userId: string) {
+  const now = new Date();
+  return prisma.subscription.findFirst({
+    where: {
+      userId,
+      status: "active",
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]
+    },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function getActiveSubscriptionSummary(userId: string) {
+  const subscription = await getActiveSubscription(userId);
+  return subscription ? toSubscriptionSummary(subscription) : null;
+}
+
+export async function getServerQuota(userId: string): Promise<ServerQuota> {
+  const [freeUsage, subscription, successfulCount] = await Promise.all([
+    getToolFreeUsage(userId),
+    getActiveSubscription(userId),
+    prisma.usageRecord.count({
+      where: {
+        userId,
+        status: "success"
+      }
+    })
+  ]);
+
+  const freeTotal = freeUsage.reduce((total, item) => total + item.total, 0);
+  const freeRemaining = freeUsage.reduce((total, item) => total + item.remaining, 0);
+  const subscriptionCredits = subscription && subscription.credits > 0 ? subscription.credits : 0;
+  const isUnlimited = subscription ? Boolean(getPlanDefinition(subscription.plan)?.unlimited || subscription.credits < 0) : false;
+
+  return {
+    userId,
+    totalQuota: isUnlimited ? freeTotal : freeTotal + subscriptionCredits,
+    usedQuota: successfulCount,
+    remainingQuota: isUnlimited ? 999999 : freeRemaining + subscriptionCredits,
+    updatedAt: nowIso()
+  };
+}
+
+export async function canUseToolServer(userId: string | null, toolInfo?: ServerToolInfo): Promise<ServerToolUseCheck> {
   if (!userId) {
     return {
       canUse: false,
       reason: "not_logged_in",
-      message: "请先登录后使用"
+      message: NOT_LOGGED_IN_MESSAGE
     };
   }
 
-  const quota = await getServerQuota(userId);
-  if (quota.remainingQuota <= 0) {
+  const [quota, freeUsage, subscription] = await Promise.all([
+    getServerQuota(userId),
+    getToolFreeUsage(userId),
+    getActiveSubscription(userId)
+  ]);
+  const requestedTool = getToolDefinition(toolInfo?.toolId) || toolInfo;
+  const currentFreeUsage = requestedTool ? freeUsage.find((item) => item.toolId === requestedTool.toolId) : freeUsage.find((item) => item.remaining > 0);
+
+  if (currentFreeUsage && currentFreeUsage.remaining > 0) {
     return {
-      canUse: false,
-      reason: "quota_empty",
-      message: QUOTA_EMPTY_MESSAGE,
-      quota
+      canUse: true,
+      reason: "ok",
+      message: "可以使用",
+      quota,
+      freeUsage,
+      subscription: subscription ? toSubscriptionSummary(subscription) : null,
+      access: {
+        source: "free"
+      }
     };
+  }
+
+  if (subscription) {
+    const plan = getPlanDefinition(subscription.plan);
+    const unlimited = Boolean(plan?.unlimited || subscription.credits < 0);
+    if (unlimited || subscription.credits > 0) {
+      return {
+        canUse: true,
+        reason: "ok",
+        message: "可以使用",
+        quota,
+        freeUsage,
+        subscription: toSubscriptionSummary(subscription),
+        access: {
+          source: "subscription",
+          subscriptionId: subscription.id,
+          unlimited
+        }
+      };
+    }
   }
 
   return {
-    canUse: true,
-    reason: "ok",
-    message: "可以使用",
-    quota
+    canUse: false,
+    reason: "free_limit_reached",
+    code: FREE_LIMIT_REACHED_CODE,
+    message: FREE_LIMIT_REACHED_MESSAGE,
+    quota,
+    freeUsage,
+    subscription: subscription ? toSubscriptionSummary(subscription) : null
   };
 }
 
-export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: ServerToolInfo) {
-  // Keep this transaction server-side to prevent frontend tampering and
-  // concurrent double spending.
+export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: ServerToolInfo, access?: ServerToolAccess) {
   return prisma.$transaction(async (tx) => {
-    const quota = await tx.userQuota.findUnique({ where: { userId } });
-    if (!quota || quota.remainingQuota <= 0) {
-      throw new Error("Quota is not available.");
-    }
+    if (access?.source === "subscription" && access.subscriptionId && !access.unlimited) {
+      const updated = await tx.subscription.updateMany({
+        where: {
+          id: access.subscriptionId,
+          userId,
+          status: "active",
+          credits: { gt: 0 },
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }]
+        },
+        data: {
+          credits: { decrement: 1 }
+        }
+      });
 
-    await tx.userQuota.update({
-      where: { userId },
-      data: {
-        usedQuota: { increment: 1 },
-        remainingQuota: { decrement: 1 }
+      if (updated.count === 0) {
+        throw new Error("Subscription credits are not available.");
       }
-    });
+    }
 
     return tx.usageRecord.create({
       data: {
@@ -123,29 +255,21 @@ export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: Ser
 }
 
 export async function addQuotaAfterPayment(userId: string, amount: number, orderInfo: ServerOrderInfo) {
-  // Payment placeholder. Only call this from a verified payment webhook or
-  // trusted admin operation. Real callbacks must verify signatures and enforce
-  // idempotency by paymentTradeNo/orderId in the same database transaction.
   if (amount <= 0) {
     throw new Error("Quota amount must be greater than 0.");
   }
 
-  const quota = await prisma.userQuota.upsert({
-    where: { userId },
-    create: {
+  const subscription = await prisma.subscription.create({
+    data: {
       userId,
-      totalQuota: amount,
-      usedQuota: 0,
-      remainingQuota: amount
-    },
-    update: {
-      totalQuota: { increment: amount },
-      remainingQuota: { increment: amount }
+      plan: "manual",
+      status: "active",
+      credits: amount
     }
   });
 
   return {
-    quota: toServerQuota(quota),
+    subscription: toSubscriptionSummary(subscription),
     orderInfo
   };
 }

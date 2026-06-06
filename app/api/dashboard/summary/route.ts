@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getCurrentServerUser } from "@/lib/server-auth";
-import { getServerQuota } from "@/lib/server-quota";
+import { getActiveSubscriptionSummary, getServerQuota, getToolFreeUsage } from "@/lib/server-quota";
 import { prisma } from "@/lib/prisma";
 
 type SummaryRange = 7 | 30 | 90 | "all";
@@ -87,8 +87,10 @@ export async function GET(request: Request) {
       startDate.setDate(startDate.getDate() - rangeDays + 1);
     }
 
-    const [quota, records] = await Promise.all([
+    const [quota, freeUsage, subscription, records] = await Promise.all([
       getServerQuota(user.id),
+      getToolFreeUsage(user.id),
+      getActiveSubscriptionSummary(user.id),
       prisma.usageRecord.findMany({
         where: {
           userId: user.id,
@@ -152,13 +154,15 @@ export async function GET(request: Request) {
       user: {
         id: user.id,
         email: user.email,
-        planName: "免费体验版"
+        planName: subscription?.planName || "免费体验版"
       },
       quota: {
         totalQuota: quota.totalQuota,
         usedQuota: quota.usedQuota,
         remainingQuota: quota.remainingQuota
       },
+      freeUsage,
+      subscription,
       totals: {
         totalCalls,
         successfulCalls,

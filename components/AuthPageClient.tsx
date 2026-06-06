@@ -17,7 +17,7 @@ type FormValues = {
 
 type FormErrors = Partial<Record<keyof FormValues | "form", string>>;
 
-const benefits = ["免费额度 5 次", "支持全部办公工具", "可查看历史记录"];
+const benefits = ["每个工具免费 1 次", "支持全部办公工具", "可查看历史记录"];
 
 export default function AuthPageClient({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
 
   const title = useMemo(() => (isLogin ? "登录账号" : "创建账号"), [isLogin]);
   const subtitle = useMemo(
-    () => (isLogin ? "登录后可继续使用工具额度和历史记录。" : "注册后可获得 5 次免费额度。"),
+    () => (isLogin ? "登录后可继续使用工具额度和历史记录。" : "注册后每个工具可免费体验 1 次。"),
     [isLogin]
   );
 

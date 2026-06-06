@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
-import { getServerQuota } from "@/lib/server-quota";
+import { getActiveSubscriptionSummary, getServerQuota, getToolFreeUsage } from "@/lib/server-quota";
 
 export async function GET() {
   const user = await getCurrentServerUser();
@@ -8,7 +8,11 @@ export async function GET() {
     return NextResponse.json({ ok: false, message: "请先登录后查看额度。" }, { status: 401 });
   }
 
-  const quota = await getServerQuota(user.id);
+  const [quota, freeUsage, subscription] = await Promise.all([
+    getServerQuota(user.id),
+    getToolFreeUsage(user.id),
+    getActiveSubscriptionSummary(user.id)
+  ]);
 
   return NextResponse.json({
     ok: true,
@@ -16,6 +20,8 @@ export async function GET() {
       totalQuota: quota.totalQuota,
       usedQuota: quota.usedQuota,
       remainingQuota: quota.remainingQuota
-    }
+    },
+    freeUsage,
+    subscription
   });
 }

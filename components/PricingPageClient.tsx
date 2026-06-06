@@ -1,95 +1,87 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, HelpCircle, Sparkles, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, HelpCircle, Loader2, Sparkles, X } from "lucide-react";
 import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
 import SmartEntryLink from "@/components/SmartEntryLink";
 import Link from "next/link";
 import { useState } from "react";
 
 type Plan = {
+  id: "basic" | "standard" | "pro";
   name: string;
   price: string;
   description: string;
   features: string[];
-  button: string;
-  action: "trial" | "pay" | "contact";
   featured?: boolean;
 };
 
 const plans: Plan[] = [
   {
-    name: "免费体验",
-    price: "¥0",
-    description: "适合首次体验 AI 办公工具效果。",
-    features: ["免费使用 1 次", "可体验任意一个工具", "支持基础生成结果", "不支持批量处理"],
-    button: "立即体验",
-    action: "trial"
-  },
-  {
-    name: "按次使用",
-    price: "¥9.9 起",
+    id: "basic",
+    name: "基础版",
+    price: "9.9 元",
     description: "适合偶尔处理文件和临时办公任务。",
-    features: ["适合偶尔使用", "单次购买额度", "支持 Excel / PDF / 文本工具", "生成结果可复制"],
-    button: "购买额度",
-    action: "pay"
+    features: ["20 次工具调用", "支持全部 7 个工具", "支持历史记录", "适合低频个人使用"]
   },
   {
-    name: "个人套餐",
-    price: "¥39 / 月",
-    description: "适合稳定使用 AI 办公工具的个人用户。",
-    features: ["每月固定额度", "支持全部 7 个工具", "支持历史记录", "支持结果下载"],
-    button: "开通套餐",
-    action: "pay",
+    id: "standard",
+    name: "标准版",
+    price: "29.9 元",
+    description: "适合稳定使用 AI 办公工具的个人或小团队。",
+    features: ["100 次工具调用", "支持全部 7 个工具", "支持 Dashboard 统计", "更适合持续办公场景"],
     featured: true
   },
   {
-    name: "企业定制",
-    price: "¥499 起",
-    description: "适合把固定业务流程做成专属 AI 助手。",
-    features: ["定制专属 AI 工作流", "支持企业业务场景", "支持私有流程配置", "支持交付文档"],
-    button: "联系定制",
-    action: "contact"
+    id: "pro",
+    name: "高级版",
+    price: "99 元",
+    description: "适合高频使用和连续处理任务。",
+    features: ["30 天内不限次调用", "支持全部 7 个工具", "适合高频文档处理", "可咨询定制工作流"]
   }
-];
-
-const compareRows = [
-  ["免费次数", "1 次", "按购买额度", "每月固定额度", "按方案配置"],
-  ["支持工具数量", "任意 1 个", "Excel / PDF / 文本工具", "全部 7 个工具", "按业务定制"],
-  ["是否支持文件上传", "支持", "支持", "支持", "支持"],
-  ["是否支持历史记录", "不支持", "不支持", "支持", "可定制"],
-  ["是否支持结果下载", "不支持", "基础支持", "支持", "支持"],
-  ["是否支持企业定制", "不支持", "不支持", "不支持", "支持"]
 ];
 
 const faqs = [
   {
-    question: "免费体验可以用几次？",
-    answer: "新用户可免费体验 1 次，可用于任意一个工具，方便先验证生成效果。"
+    question: "免费次数怎么计算？",
+    answer: "新用户每个工具默认赠送 1 次免费体验。某个工具的免费次数用完后，需要购买套餐或联系作者继续使用。"
   },
   {
-    question: "购买后额度会过期吗？",
-    answer: "按次额度和套餐额度的有效期会在正式支付功能上线后明确展示，当前页面仅作方案展示。"
+    question: "套餐次数是否跨工具通用？",
+    answer: "基础版和标准版的调用次数在全部 7 个工具之间通用。高级版在有效期内不限次使用。"
   },
   {
-    question: "支持微信支付吗？",
-    answer: "后续会优先支持微信支付等常用方式。当前支付功能尚未上线，可先联系定制或免费体验。"
+    question: "现在是否已经接入自动支付？",
+    answer: "当前版本已支持创建订单和套餐数据结构，但真实支付回调仍需接入微信、支付宝或其他支付服务后才能自动开通。"
   },
   {
-    question: "可以开发专属工具吗？",
-    answer: "可以。企业定制支持根据你的表格、文档、汇报模板和业务流程开发专属 AI 工具。"
-  },
-  {
-    question: "企业定制怎么收费？",
-    answer: "企业定制会根据工具数量、流程复杂度、是否需要文件处理和交付范围报价，基础方案 ¥499 起。"
+    question: "可以做企业定制吗？",
+    answer: "可以。你可以通过联系定制页面提交需求，表单会同步到飞书需求表。"
   }
 ];
 
 export default function PricingPageClient() {
-  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [orderMessage, setOrderMessage] = useState("");
 
-  function handlePlanClick(plan: Plan) {
-    if (plan.action === "pay") {
-      setPaymentOpen(true);
+  async function createOrder(plan: Plan) {
+    setLoadingPlan(plan.id);
+    setOrderMessage("");
+    try {
+      const response = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan.id })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data?.ok === false) {
+        setOrderMessage(typeof data?.message === "string" ? data.message : "订单创建失败，请稍后重试。");
+        return;
+      }
+      setSelectedPlan(plan);
+      setOrderMessage(data?.message || "订单已创建，请联系作者开通套餐。");
+    } finally {
+      setLoadingPlan(null);
     }
   }
 
@@ -99,106 +91,95 @@ export default function PricingPageClient() {
         <div className="mx-auto max-w-7xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
             <Sparkles className="h-4 w-4 text-blue-600" />
-            灵活付费，按需使用
+            首次免费，后续按需购买
           </div>
           <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-6xl">
-            灵活定价，先体验再付费
+            AI 办公工具箱套餐
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-            新用户可免费体验 1 次，适合个人、小团队和企业定制使用。
+            新用户每个工具可免费体验 1 次。免费次数用完后，可购买套餐继续使用，或联系作者定制专属 AI 工具。
           </p>
         </div>
       </section>
 
       <section className="px-5 py-14 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {plans.map((plan, planIndex) => (
+        <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
+          {plans.map((plan) => (
             <article
-              key={`${plan.name}-${planIndex}`}
+              key={plan.id}
               className={
                 plan.featured
                   ? "relative rounded-3xl border border-slate-950 bg-slate-950 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,0.2)]"
                   : "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]"
               }
             >
-              {plan.featured ? (
-                <span className="absolute right-5 top-5 rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">
-                  推荐
-                </span>
-              ) : null}
+              {plan.featured ? <span className="absolute right-5 top-5 rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">推荐</span> : null}
               <h2 className={plan.featured ? "text-xl font-semibold text-white" : "text-xl font-semibold text-slate-950"}>{plan.name}</h2>
-              <p className={plan.featured ? "mt-3 text-sm leading-6 text-slate-300" : "mt-3 text-sm leading-6 text-slate-500"}>
-                {plan.description}
-              </p>
-              <p className={plan.featured ? "mt-6 text-4xl font-semibold text-white" : "mt-6 text-4xl font-semibold text-slate-950"}>
-                {plan.price}
-              </p>
+              <p className={plan.featured ? "mt-3 text-sm leading-6 text-slate-300" : "mt-3 text-sm leading-6 text-slate-500"}>{plan.description}</p>
+              <p className={plan.featured ? "mt-6 text-4xl font-semibold text-white" : "mt-6 text-4xl font-semibold text-slate-950"}>{plan.price}</p>
               <div className="mt-6 space-y-3">
-                {plan.features.map((feature, featureIndex) => (
-                  <div key={`${plan.name}-${featureIndex}`} className={plan.featured ? "flex gap-3 text-sm text-slate-200" : "flex gap-3 text-sm text-slate-700"}>
+                {plan.features.map((feature) => (
+                  <div key={feature} className={plan.featured ? "flex gap-3 text-sm text-slate-200" : "flex gap-3 text-sm text-slate-700"}>
                     <CheckCircle2 className={plan.featured ? "mt-0.5 h-4 w-4 shrink-0 text-blue-300" : "mt-0.5 h-4 w-4 shrink-0 text-blue-600"} />
                     <span>{feature}</span>
                   </div>
                 ))}
               </div>
-
-              {plan.action === "trial" ? (
-                <SmartEntryLink className="mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800">
-                  {plan.button}
-                  <ArrowRight className="h-4 w-4" />
-                </SmartEntryLink>
-              ) : plan.action === "contact" ? (
-                <Link href="/contact" className="mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800">
-                  {plan.button}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => handlePlanClick(plan)}
-                  className={
-                    plan.featured
-                      ? "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-blue-50"
-                      : "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-slate-50"
-                  }
-                >
-                  {plan.button}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => createOrder(plan)}
+                disabled={loadingPlan === plan.id}
+                className={
+                  plan.featured
+                    ? "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    : "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+                }
+              >
+                {loadingPlan === plan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                购买套餐
+              </button>
             </article>
           ))}
         </div>
+        {orderMessage ? (
+          <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm leading-6 text-blue-900">{orderMessage}</div>
+        ) : null}
       </section>
 
       <section className="border-y border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeader title="套餐对比" description="从免费体验到企业定制，按使用频率和业务复杂度选择合适方案。" />
+        <div className="mx-auto max-w-5xl">
+          <SectionHeader title="套餐对比" description="基础版、标准版按次数消耗，高级版在有效期内不限次调用。" />
           <div className="mt-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
-                    <th className="px-5 py-4 font-semibold">对比项</th>
-                    <th className="px-5 py-4 font-semibold">免费体验</th>
-                    <th className="px-5 py-4 font-semibold">按次使用</th>
-                    <th className="px-5 py-4 font-semibold">个人套餐</th>
-                    <th className="px-5 py-4 font-semibold">企业定制</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {compareRows.map((row, rowIndex) => (
-                    <tr key={`${row[0]}-${rowIndex}`} className="border-b border-slate-100 last:border-b-0">
-                      {row.map((cell, index) => (
-                        <td key={`${row[0]}-${index}`} className={index === 0 ? "px-5 py-4 font-semibold text-slate-950" : "px-5 py-4 text-slate-600"}>
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <table className="w-full min-w-[720px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+                  <th className="px-5 py-4 font-semibold">套餐</th>
+                  <th className="px-5 py-4 font-semibold">价格</th>
+                  <th className="px-5 py-4 font-semibold">额度</th>
+                  <th className="px-5 py-4 font-semibold">适合人群</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-100">
+                  <td className="px-5 py-4 font-semibold">基础版</td>
+                  <td className="px-5 py-4">9.9 元</td>
+                  <td className="px-5 py-4">20 次</td>
+                  <td className="px-5 py-4">低频个人使用</td>
+                </tr>
+                <tr className="border-b border-slate-100">
+                  <td className="px-5 py-4 font-semibold">标准版</td>
+                  <td className="px-5 py-4">29.9 元</td>
+                  <td className="px-5 py-4">100 次</td>
+                  <td className="px-5 py-4">稳定办公场景</td>
+                </tr>
+                <tr>
+                  <td className="px-5 py-4 font-semibold">高级版</td>
+                  <td className="px-5 py-4">99 元</td>
+                  <td className="px-5 py-4">30 天不限次</td>
+                  <td className="px-5 py-4">高频处理任务</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -207,8 +188,8 @@ export default function PricingPageClient() {
         <div className="mx-auto max-w-4xl">
           <SectionHeader title="常见问题" />
           <div className="mt-10 divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-white px-6 shadow-sm">
-            {faqs.map((faq, faqIndex) => (
-              <details key={`${faq.question}-${faqIndex}`} className="group py-5">
+            {faqs.map((faq) => (
+              <details key={faq.question} className="group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-slate-950">
                   <span className="flex items-center gap-3">
                     <HelpCircle className="h-5 w-5 text-blue-600" />
@@ -228,13 +209,11 @@ export default function PricingPageClient() {
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <h2 className="text-2xl font-semibold tracking-normal sm:text-4xl">不确定选哪个套餐？</h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                你可以先免费体验，也可以告诉我们你的使用频率和业务场景，我们会推荐更合适的方案。
-              </p>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">可以先免费体验，也可以告诉我你的使用频率和业务场景，我会推荐更合适的方案。</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/contact" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-blue-50">
-                联系我们
+                联系定制
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <SmartEntryLink className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10">
@@ -246,7 +225,7 @@ export default function PricingPageClient() {
         </div>
       </section>
 
-      {paymentOpen ? <PaymentModal onClose={() => setPaymentOpen(false)} /> : null}
+      {selectedPlan ? <OrderContactModal plan={selectedPlan} message={orderMessage} onClose={() => setSelectedPlan(null)} /> : null}
     </main>
   );
 }
@@ -260,15 +239,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
   );
 }
 
-function PaymentModal({ onClose }: { onClose: () => void }) {
-  const [copied, setCopied] = useState<"email" | "douyin" | null>(null);
-
-  async function copyText(value: string, target: "email" | "douyin") {
-    await navigator.clipboard.writeText(value);
-    setCopied(target);
-    window.setTimeout(() => setCopied(null), 1600);
-  }
-
+function OrderContactModal({ plan, message, onClose }: { plan: Plan; message: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
@@ -280,27 +251,23 @@ function PaymentModal({ onClose }: { onClose: () => void }) {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h2 className="mt-5 text-xl font-semibold text-slate-950">支付功能即将上线</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-600">
-          当前阶段暂未接入真实支付接口。想继续体验、开通更多额度或定制专属 AI 工具，请通过联系页、邮箱或抖音联系作者。
-        </p>
+        <h2 className="mt-5 text-xl font-semibold text-slate-950">已选择 {plan.name}</h2>
+        <p className="mt-3 text-sm leading-7 text-slate-600">{message || "订单已创建，请联系作者开通套餐。"}</p>
         <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-          <p>邮箱：<span className="font-semibold text-slate-950">{AUTHOR_EMAIL}</span></p>
-          <p className="mt-1">抖音号：<span className="font-semibold text-slate-950">{AUTHOR_DOUYIN_ID}</span></p>
+          <p>
+            邮箱：<span className="font-semibold text-slate-950">{AUTHOR_EMAIL}</span>
+          </p>
+          <p className="mt-1">
+            抖音号：<span className="font-semibold text-slate-950">{AUTHOR_DOUYIN_ID}</span>
+          </p>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
-            联系定制
-          </Link>
-          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
             发送邮件
           </a>
-          <button type="button" onClick={() => copyText(AUTHOR_EMAIL, "email")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            {copied === "email" ? "已复制" : "复制邮箱"}
-          </button>
-          <button type="button" onClick={() => copyText(AUTHOR_DOUYIN_ID, "douyin")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            {copied === "douyin" ? "已复制" : "复制抖音号"}
-          </button>
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+            联系定制
+          </Link>
         </div>
       </div>
     </div>

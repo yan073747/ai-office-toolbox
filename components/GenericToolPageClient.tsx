@@ -17,9 +17,9 @@ import {
   X
 } from "lucide-react";
 import { AUTHOR_DOUYIN_ID, CONTACT_MAILTO, isQuotaEmptyMessage, QUOTA_EMPTY_MESSAGE } from "@/lib/contact-info";
-import { canUseTool, consumeQuotaAfterSuccess } from "@/lib/user-store";
+import { consumeQuotaAfterSuccess } from "@/lib/user-store";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Dispatch, RefObject, SetStateAction } from "react";
@@ -63,7 +63,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "Excel 数据分析",
     intro: "上传 Excel 或 CSV，自动生成数据分析报告。",
     formats: ".xlsx / .xls / .csv",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "file",
     accept: ".xlsx,.xls,.csv",
     uploadHint: "支持 Excel / CSV 文件",
@@ -86,7 +86,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "PDF 智能总结",
     intro: "上传 PDF 文档，快速提炼摘要、重点内容和风险点。",
     formats: ".pdf",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "file",
     accept: ".pdf",
     uploadHint: "支持可复制文字的 PDF",
@@ -109,7 +109,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "合同重点提取",
     intro: "识别合同主体、金额、义务、违约责任和关键时间节点。",
     formats: ".pdf / 文本",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "hybrid",
     accept: ".pdf,.txt,.doc,.docx",
     uploadHint: "支持合同 PDF / Word / TXT，也可粘贴合同文本",
@@ -132,7 +132,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "日报周报月报生成",
     intro: "输入工作内容，自动生成正式、简洁或商务风格的汇报。",
     formats: "文本",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "text",
     submitLabel: "生成报告",
     emptyText: "生成的工作报告会显示在这里",
@@ -173,7 +173,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "PPT 大纲大师",
     intro: "输入主题和页数，自动生成完整 PPT 页面结构。",
     formats: "主题 / 页数 / 风格",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "text",
     submitLabel: "生成大纲",
     emptyText: "PPT 大纲会显示在这里",
@@ -215,7 +215,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "会议纪要整理",
     intro: "将杂乱会议记录整理成纪要、结论和待办事项。",
     formats: "会议文本",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "text",
     submitLabel: "整理纪要",
     emptyText: "会议纪要会显示在这里",
@@ -248,7 +248,7 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "邮件通知润色",
     intro: "将普通表达改写成正式邮件、公告或通知。",
     formats: "文本",
-    quotaText: "新用户免费额度 5 次",
+    quotaText: "每个工具免费体验 1 次",
     kind: "text",
     submitLabel: "开始润色",
     emptyText: "润色结果会显示在这里",
@@ -304,8 +304,24 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
   const [copied, setCopied] = useState(false);
   const [sampleOpen, setSampleOpen] = useState(false);
   const [quotaOpen, setQuotaOpen] = useState(false);
+  const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
   const resultRef = useRef<HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const refreshToolQuota = useCallback(async () => {
+    try {
+      const response = await fetch("/api/quota/me", { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.ok) {
+        setFreeRemaining(null);
+        return;
+      }
+      const current = Array.isArray(data.freeUsage) ? data.freeUsage.find((item: { toolId?: string }) => item.toolId === tool.id) : null;
+      setFreeRemaining(typeof current?.remaining === "number" ? current.remaining : null);
+    } catch {
+      setFreeRemaining(null);
+    }
+  }, [tool.id]);
 
   useEffect(() => {
     setValues(createInitialValues(tool));
@@ -315,7 +331,9 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
     setIsLoading(false);
     setCopied(false);
     setSampleOpen(false);
-  }, [tool]);
+    setFreeRemaining(null);
+    void refreshToolQuota();
+  }, [refreshToolQuota, tool]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -333,13 +351,6 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
       return;
     }
 
-    const toolUseCheck = await canUseTool();
-    if (!toolUseCheck.canUse) {
-      if (toolUseCheck.reason === "quota_empty") setQuotaOpen(true);
-      setError(toolUseCheck.message);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -352,8 +363,8 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const message = normalizeErrorMessage(data?.error);
-        if (message.includes("额度不足")) setQuotaOpen(true);
+        const message = normalizeErrorMessage(data?.message || data?.error || data?.code);
+        if (data?.code === "FREE_LIMIT_REACHED" || message.includes("免费次数") || message.includes("额度")) setQuotaOpen(true);
         setError(message);
         return;
       }
@@ -369,6 +380,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
         toolName: tool.name,
         inputType: getInputType(tool)
       });
+      await refreshToolQuota();
       window.requestAnimationFrame(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
@@ -419,7 +431,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
                 <Sparkles className="h-4 w-4 text-blue-600" />
-                {tool.quotaText}
+                {freeRemaining === null ? tool.quotaText : `剩余免费次数：${freeRemaining}次`}
               </div>
               <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">{tool.name}</h1>
               <p className="mt-4 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">{tool.intro}</p>
@@ -756,16 +768,21 @@ function QuotaModal({ onClose }: { onClose: () => void }) {
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
           <Sparkles className="h-5 w-5" />
         </div>
-        <h2 className="mt-5 text-xl font-semibold text-slate-950">免费额度已用完</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-600">{QUOTA_EMPTY_MESSAGE}</p>
+        <h2 className="mt-5 text-xl font-semibold text-slate-950">免费次数已用完</h2>
+        <p className="mt-3 text-sm leading-7 text-slate-600">免费次数已用完，请购买套餐继续使用。也可以联系作者咨询定制服务。</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+          <Link href="/pricing" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+            购买套餐
+          </Link>
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
             联系定制
           </Link>
           <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
             <Mail className="h-4 w-4" />
             发送邮件
           </a>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-1">
           <button type="button" onClick={copyDouyinId} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
             <Copy className="h-4 w-4" />
             {copied ? "已复制" : "复制抖音号"}
@@ -887,6 +904,7 @@ function normalizeErrorMessage(message: unknown) {
   const text = typeof message === "string" ? message : "";
 
   if (!text) return "服务暂时繁忙，请稍后重试。";
+  if (text.includes("FREE_LIMIT_REACHED") || text.includes("免费次数已用完")) return "免费次数已用完，请购买套餐继续使用";
   if (text.includes("quota") || text.includes("额度")) return QUOTA_EMPTY_MESSAGE;
   if (text.includes("OCR") || text.includes("未读取") || text.includes("无法读取") || text.includes("empty")) {
     return "文件内容无法读取，当前版本暂不支持 OCR，请上传可复制文字的文档。";
@@ -917,4 +935,5 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
 

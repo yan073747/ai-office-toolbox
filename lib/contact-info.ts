@@ -6,7 +6,7 @@ export const CONTACT_MAIL_BODY = "你好，我想咨询 AI 办公工具箱的继
 
 export const CONTACT_MAILTO = `mailto:${AUTHOR_EMAIL}?subject=${CONTACT_MAIL_SUBJECT}&body=${CONTACT_MAIL_BODY}`;
 
-export const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
+export const QUOTA_EMPTY_MESSAGE = "免费次数已用完，请购买套餐继续使用";
 
 export function isQuotaEmptyMessage(message: string) {
   return message === QUOTA_EMPTY_MESSAGE || message.includes("免费额度已用完") || message.includes("额度不足");

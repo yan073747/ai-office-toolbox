@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
-import { getServerQuota } from "@/lib/server-quota";
+import { getActiveSubscriptionSummary, getServerQuota } from "@/lib/server-quota";
 
 export async function GET() {
   const user = await getCurrentServerUser();
@@ -12,14 +12,18 @@ export async function GET() {
     });
   }
 
-  const quota = await getServerQuota(user.id);
+  const [quota, subscription] = await Promise.all([
+    getServerQuota(user.id),
+    getActiveSubscriptionSummary(user.id)
+  ]);
 
   return NextResponse.json({
     ok: true,
     user: {
       ...user,
-      planName: "免费体验版",
+      planName: subscription?.planName || "免费体验版",
       freeQuota: quota.remainingQuota
-    }
+    },
+    subscription
   });
 }

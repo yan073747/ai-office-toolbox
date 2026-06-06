@@ -1,22 +1,50 @@
 import { NextResponse } from "next/server";
+import { PLAN_DEFINITIONS, getPlanDefinition } from "@/lib/plans";
+import { prisma } from "@/lib/prisma";
+import { getCurrentServerUser } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({}));
+  const user = await getCurrentServerUser();
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "请先登录后购买套餐。" }, { status: 401 });
+  }
 
-  // Payment placeholder only. No real WeChat Pay or Alipay integration is active.
-  // Production must create an order server-side and return provider payment data.
+  const body = await request.json().catch(() => ({}));
+  const plan = getPlanDefinition(String(body.plan || body.planId || ""));
+  if (!plan) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "套餐不存在。",
+        plans: PLAN_DEFINITIONS.map((item) => ({ id: item.id, name: item.name, price: item.price }))
+      },
+      { status: 400 }
+    );
+  }
+
+  const order = await prisma.order.create({
+    data: {
+      userId: user.id,
+      planName: plan.name,
+      amount: plan.price,
+      quotaAmount: plan.unlimited ? 0 : plan.credits,
+      paymentProvider: "manual",
+      paymentStatus: "pending"
+    }
+  });
+
   return NextResponse.json({
     ok: true,
-    mode: "payment-placeholder",
+    mode: "payment-provider-not-connected",
     order: {
-      id: "mock_order_pending_payment_provider",
-      planName: body.planName || "custom",
-      amount: body.amount || 0,
-      quotaAmount: body.quotaAmount || 0,
-      paymentProvider: body.paymentProvider || "manual",
-      paymentStatus: "pending",
-      createdAt: new Date().toISOString()
+      id: order.id,
+      planName: order.planName,
+      amount: order.amount.toString(),
+      quotaAmount: order.quotaAmount,
+      paymentProvider: order.paymentProvider,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt.toISOString()
     },
-    note: "Payment is not connected. Contact custom service or wire WeChat Pay/Alipay in V1.1."
+    message: "订单已创建。当前版本尚未接入真实支付回调，请联系作者开通套餐。"
   });
 }

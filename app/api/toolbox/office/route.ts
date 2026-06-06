@@ -2,7 +2,7 @@ import { DifyApiError, extractDifyResult, runWorkflow, runWorkflowStreaming, toD
 import { writeAuditLog } from "@/lib/audit-log";
 import { countRateLimitEvents, getIpHash, getRateLimitKey, recordRateLimitEvent } from "@/lib/rate-limit";
 import { getSessionUserId } from "@/lib/server-auth";
-import { canUseToolServer, consumeQuotaAfterToolSuccess } from "@/lib/server-quota";
+import { FREE_LIMIT_REACHED_CODE, canUseToolServer, consumeQuotaAfterToolSuccess } from "@/lib/server-quota";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -230,9 +230,12 @@ export async function POST(request: Request) {
 
   try {
     userId = await getSessionUserId();
-    const quotaCheck = await canUseToolServer(userId);
+    const payload = await parsePayload(request);
+    auditToolType = payload.tool_type || "unknown";
+    const toolInfo = getToolInfo(payload);
+    const quotaCheck = await canUseToolServer(userId, toolInfo);
     if (!quotaCheck.canUse) {
-      if (quotaCheck.reason === "quota_empty") {
+      if (quotaCheck.reason === "free_limit_reached") {
         await writeAuditLog({
           request,
           userId,
@@ -240,15 +243,24 @@ export async function POST(request: Request) {
           level: "warn",
           metadata: {
             reason: quotaCheck.reason,
+            code: quotaCheck.code,
+            tool_type: auditToolType,
+            toolId: toolInfo.toolId,
             remainingQuota: quotaCheck.quota?.remainingQuota
           }
         });
       }
-      return NextResponse.json({ error: quotaCheck.message }, { status: quotaCheck.reason === "not_logged_in" ? 401 : 402 });
+      return NextResponse.json(
+        {
+          success: false,
+          code: quotaCheck.code || (quotaCheck.reason === "not_logged_in" ? "NOT_LOGGED_IN" : FREE_LIMIT_REACHED_CODE),
+          message: quotaCheck.message,
+          error: quotaCheck.message
+        },
+        { status: quotaCheck.reason === "not_logged_in" ? 401 : 402 }
+      );
     }
 
-    const payload = await parsePayload(request);
-    auditToolType = payload.tool_type || "unknown";
     const inputs = await createInputs(payload, apiKey);
     logDifyInputSummary(payload, inputs);
     const response =
@@ -304,7 +316,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "未获取到有效输出。" }, { status: 502 });
     }
 
-    await consumeQuotaAfterToolSuccess(userId as string, getToolInfo(payload));
+    await consumeQuotaAfterToolSuccess(userId as string, toolInfo, quotaCheck.access);
     return NextResponse.json({ result });
   } catch (error) {
     const errorType = error instanceof DifyApiError ? `dify_${error.status || "unknown"}` : error instanceof Error ? error.name : "unknown";

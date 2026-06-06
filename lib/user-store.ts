@@ -5,7 +5,8 @@ export type LocalUser = {
   email: string;
   freeQuota: number;
   createdAt?: string;
-  planName: "免费体验版";
+  planName: string;
+  role?: string;
 };
 
 export type UsageRecord = {
@@ -32,7 +33,7 @@ export type ToolUsageInfo = {
   inputType: string;
 };
 
-const QUOTA_EMPTY_MESSAGE = "你已使用完 5 次免费体验。想继续体验、开通更多额度或定制专属 AI 工具，请联系作者。";
+const QUOTA_EMPTY_MESSAGE = "免费次数已用完，请购买套餐继续使用";
 const USER_UPDATED_EVENT = "ai-toolbox-user-updated";
 
 function emitUserUpdated() {
@@ -129,8 +130,6 @@ export async function canUseTool(): Promise<ToolUseCheck> {
 }
 
 export async function consumeQuotaAfterSuccess(_tool: ToolUsageInfo) {
-  // Quota and usage records are now written by /api/toolbox/office after a
-  // successful Dify response. This client function only refreshes subscribed UI.
   emitUserUpdated();
 }
 

@@ -48,11 +48,29 @@ type ToolStat = {
   quotaUsed: number;
 };
 
+type ToolFreeUsage = {
+  toolId: string;
+  toolName: string;
+  used: number;
+  total: number;
+  remaining: number;
+};
+
+type SubscriptionSummary = {
+  id: string;
+  plan: string;
+  planName: string;
+  status: string;
+  credits: number;
+  unlimited: boolean;
+  expiresAt: string | null;
+};
+
 type DashboardSummary = {
   user: {
     id: string;
     email: string;
-    planName: "免费体验版";
+    planName: string;
   };
   quota: {
     totalQuota: number;
@@ -68,6 +86,8 @@ type DashboardSummary = {
   latestRecord: UsageRecord | null;
   trend: TrendItem[];
   byTool: ToolStat[];
+  freeUsage?: ToolFreeUsage[];
+  subscription?: SubscriptionSummary | null;
 };
 
 type RecordsResponse = {
@@ -146,7 +166,7 @@ export default function DashboardClient() {
 
   const quotaItems = useMemo(
     () => [
-      { label: "总额度", value: `${summary?.quota.totalQuota ?? 0} 次`, note: "注册后默认 5 次免费体验" },
+      { label: "总额度", value: `${summary?.quota.totalQuota ?? 0} 次`, note: "每个工具默认 1 次免费体验" },
       { label: "已使用额度", value: `${summary?.quota.usedQuota ?? 0} 次`, note: "工具成功调用后扣减" },
       { label: "剩余额度", value: `${summary?.quota.remainingQuota ?? 0} 次`, note: "云端实时保存" },
       { label: "本周期调用", value: `${summary?.totals.totalCalls ?? 0} 次`, note: `${rangeLabel(rangeDays)}统计` }
@@ -354,7 +374,14 @@ export default function DashboardClient() {
                   onOpenUpgrade={() => setPaymentOpen(true)}
                 />
               ) : null}
-              {activeTab === "quota" ? <QuotaPanel quotaItems={quotaItems} onOpenUpgrade={() => setPaymentOpen(true)} /> : null}
+              {activeTab === "quota" ? (
+                <QuotaPanel
+                  quotaItems={quotaItems}
+                  freeUsage={summary?.freeUsage || []}
+                  subscription={summary?.subscription || null}
+                  onOpenUpgrade={() => setPaymentOpen(true)}
+                />
+              ) : null}
               {activeTab === "records" ? (
                 <RecordsPanel
                   recordsData={recordsData}
@@ -636,13 +663,57 @@ function ToolStatsList({ stats }: { stats: ToolStat[] }) {
   );
 }
 
-function QuotaPanel({ quotaItems, onOpenUpgrade }: { quotaItems: Array<{ label: string; value: string; note: string }>; onOpenUpgrade: () => void }) {
+function QuotaPanel({
+  quotaItems,
+  freeUsage,
+  subscription,
+  onOpenUpgrade
+}: {
+  quotaItems: Array<{ label: string; value: string; note: string }>;
+  freeUsage: ToolFreeUsage[];
+  subscription: SubscriptionSummary | null;
+  onOpenUpgrade: () => void;
+}) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {quotaItems.map((item) => (
           <StatCard key={item.label} label={item.label} value={item.value} note={item.note} />
         ))}
+      </div>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-slate-950">我的使用情况</h3>
+            <p className="mt-1 text-sm text-slate-500">每个工具默认赠送 1 次免费体验，使用后可通过套餐继续调用。</p>
+          </div>
+          <div className="text-sm font-semibold text-slate-700">
+            当前套餐：{subscription?.planName || "免费体验版"}
+            {subscription?.unlimited ? "（30 天内不限次）" : subscription ? `（剩余 ${subscription.credits} 次）` : ""}
+          </div>
+        </div>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-slate-500">
+                <th className="py-3 pr-4 font-semibold">工具</th>
+                <th className="py-3 pr-4 font-semibold">免费次数</th>
+                <th className="py-3 pr-4 font-semibold">剩余免费次数</th>
+              </tr>
+            </thead>
+            <tbody>
+              {freeUsage.map((item) => (
+                <tr key={item.toolId} className="border-b border-slate-100 last:border-b-0">
+                  <td className="py-3 pr-4 font-semibold text-slate-900">{item.toolName}</td>
+                  <td className="py-3 pr-4 text-slate-600">
+                    {item.used}/{item.total}
+                  </td>
+                  <td className="py-3 pr-4 text-slate-600">{item.remaining} 次</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <button type="button" onClick={onOpenUpgrade} className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white">
@@ -981,3 +1052,4 @@ function formatDateTime(value: string) {
     minute: "2-digit"
   });
 }
+
