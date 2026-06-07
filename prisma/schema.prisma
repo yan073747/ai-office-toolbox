@@ -15,6 +15,9 @@ model User {
   id           String               @id @default(cuid())
   email        String               @unique
   passwordHash String               @map("password_hash")
+  isVerified   Boolean              @default(false) @map("is_verified")
+  verificationCodeHash String?      @map("verification_code_hash")
+  verificationExpiresAt DateTime?   @map("verification_expires_at")
   role         String               @default("user")
   currentPlan  String?              @map("current_plan")
   remainingQuota Int                @default(0) @map("remaining_quota")
@@ -28,6 +31,8 @@ model User {
   subscriptions Subscription[]
 
   @@index([role])
+  @@index([isVerified])
+  @@index([verificationExpiresAt])
   @@map("users")
 }
 

@@ -8,6 +8,9 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ ok: false, message: "请先登录后购买套餐。" }, { status: 401 });
   }
+  if (!user.isVerified) {
+    return NextResponse.json({ ok: false, message: "请先完成邮箱验证后再购买套餐。" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const plan = getPlanDefinition(String(body.plan || body.planId || ""));

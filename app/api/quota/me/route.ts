@@ -7,6 +7,9 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ ok: false, message: "请先登录后查看额度。" }, { status: 401 });
   }
+  if (!user.isVerified) {
+    return NextResponse.json({ ok: false, message: "请先完成邮箱验证后查看额度。" }, { status: 403 });
+  }
 
   const [quota, freeUsage, subscription] = await Promise.all([
     getServerQuota(user.id),

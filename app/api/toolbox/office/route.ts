@@ -257,7 +257,7 @@ export async function POST(request: Request) {
           message: quotaCheck.message,
           error: quotaCheck.message
         },
-        { status: quotaCheck.reason === "not_logged_in" ? 401 : 402 }
+        { status: quotaCheck.reason === "not_logged_in" ? 401 : quotaCheck.reason === "email_not_verified" ? 403 : 402 }
       );
     }
 

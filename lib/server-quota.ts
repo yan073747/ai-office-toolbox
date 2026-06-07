@@ -47,7 +47,7 @@ export type ServerToolAccess = {
 
 export type ServerToolUseCheck = {
   canUse: boolean;
-  reason: "not_logged_in" | "free_limit_reached" | "subscription_quota_reached" | "ok";
+  reason: "not_logged_in" | "email_not_verified" | "free_limit_reached" | "subscription_quota_reached" | "ok";
   code?: string;
   message: string;
   quota?: ServerQuota;
@@ -63,6 +63,7 @@ export type ServerOrderInfo = {
 };
 
 const NOT_LOGGED_IN_MESSAGE = "请先登录后使用";
+const EMAIL_NOT_VERIFIED_MESSAGE = "请先完成邮箱验证后再使用工具。";
 
 function nowIso() {
   return new Date().toISOString();
@@ -164,6 +165,19 @@ export async function canUseToolServer(userId: string | null, toolInfo?: ServerT
       canUse: false,
       reason: "not_logged_in",
       message: NOT_LOGGED_IN_MESSAGE
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isVerified: true }
+  });
+  if (!user || !user.isVerified) {
+    return {
+      canUse: false,
+      reason: "email_not_verified",
+      code: "EMAIL_NOT_VERIFIED",
+      message: EMAIL_NOT_VERIFIED_MESSAGE
     };
   }
 

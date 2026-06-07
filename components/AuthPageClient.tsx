@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Loader2, LockKeyhole, Sparkles } from "lucide-react";
-import { loginUser, registerUser } from "@/lib/user-store";
+import { loginUser, registerUser, verifyRegisteredUser } from "@/lib/user-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
@@ -12,12 +12,14 @@ type FormValues = {
   account: string;
   password: string;
   confirmPassword: string;
+  verificationCode: string;
   rememberMe: boolean;
 };
 
 type FormErrors = Partial<Record<keyof FormValues | "form", string>>;
 
 const benefits = ["每个工具免费 1 次", "支持全部办公工具", "可查看历史记录"];
+type RegisterStep = "credentials" | "verify";
 
 export default function AuthPageClient({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -26,10 +28,12 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
     account: "",
     password: "",
     confirmPassword: "",
+    verificationCode: "",
     rememberMe: false
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [registerStep, setRegisterStep] = useState<RegisterStep>("credentials");
   const [successMessage, setSuccessMessage] = useState("");
 
   const title = useMemo(() => (isLogin ? "登录账号" : "创建账号"), [isLogin]);
@@ -39,8 +43,15 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
   );
 
   function updateValue(name: keyof FormValues, value: string) {
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => ({
+      ...current,
+      [name]: value,
+      ...(!isLogin && name !== "verificationCode" ? { verificationCode: "" } : {})
+    }));
     setErrors((current) => ({ ...current, [name]: undefined, form: undefined }));
+    if (!isLogin && name !== "verificationCode") {
+      setRegisterStep("credentials");
+    }
     setSuccessMessage("");
   }
 
@@ -54,7 +65,7 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
     event.preventDefault();
     setSuccessMessage("");
 
-    const nextErrors = validateForm(mode, values);
+    const nextErrors = validateForm(mode, values, registerStep === "verify");
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -64,15 +75,42 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
     try {
       if (isLogin) {
         await loginUser(values.account, values.password, values.rememberMe);
+        setSuccessMessage("登录成功，正在返回首页。");
+        router.refresh();
+        router.push("/");
+      } else if (registerStep === "credentials") {
+        const result = await registerUser(values.account, values.password, values.confirmPassword);
+        setRegisterStep("verify");
+        setSuccessMessage(result.message || "验证码已发送，请查收邮件。");
       } else {
-        await registerUser(values.account, values.password, values.confirmPassword);
+        await verifyRegisteredUser(values.account, values.verificationCode);
+        setSuccessMessage("邮箱验证成功，正在进入控制台。");
+        router.refresh();
+        window.setTimeout(() => router.push("/dashboard"), 500);
       }
-      setSuccessMessage(isLogin ? "登录成功，正在返回首页。" : "注册成功，正在返回首页。");
-      router.refresh();
-      router.push("/");
     } catch (error) {
       setErrors({
         form: error instanceof Error ? error.message : "操作失败，请稍后重试。"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleResendCode() {
+    setSuccessMessage("");
+    const nextErrors = validateForm(mode, values, false);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setIsLoading(true);
+    try {
+      const result = await registerUser(values.account, values.password, values.confirmPassword);
+      setRegisterStep("verify");
+      setSuccessMessage(result.message || "验证码已重新发送，请查收邮件。");
+    } catch (error) {
+      setErrors({
+        form: error instanceof Error ? error.message : "验证码发送失败，请稍后重试。"
       });
     } finally {
       setIsLoading(false);
@@ -142,14 +180,35 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
                 />
 
                 {!isLogin ? (
-                  <Field
-                    label="确认密码"
-                    type="password"
-                    value={values.confirmPassword}
-                    placeholder="请再次输入密码"
-                    error={errors.confirmPassword}
-                    onChange={(value) => updateValue("confirmPassword", value)}
-                  />
+                  <>
+                    <Field
+                      label="确认密码"
+                      type="password"
+                      value={values.confirmPassword}
+                      placeholder="请再次输入密码"
+                      error={errors.confirmPassword}
+                      onChange={(value) => updateValue("confirmPassword", value)}
+                    />
+                    {registerStep === "verify" ? (
+                      <div className="space-y-3">
+                        <Field
+                          label="邮箱验证码"
+                          value={values.verificationCode}
+                          placeholder="请输入 6 位验证码"
+                          error={errors.verificationCode}
+                          onChange={(value) => updateValue("verificationCode", value.replace(/\D/g, "").slice(0, 6))}
+                        />
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={handleResendCode}
+                          className="text-sm font-semibold text-slate-700 transition hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                        >
+                          重新发送验证码
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
                 ) : null}
 
                 {isLogin ? (
@@ -187,7 +246,7 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
                   className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}
-                  {isLoading ? "处理中..." : isLogin ? "登录" : "注册"}
+                  {isLoading ? "处理中..." : isLogin ? "登录" : registerStep === "verify" ? "验证并激活账号" : "发送验证码"}
                 </button>
 
               </form>
@@ -244,7 +303,7 @@ function Field({
   );
 }
 
-function validateForm(mode: AuthMode, values: FormValues) {
+function validateForm(mode: AuthMode, values: FormValues, requireVerificationCode = false) {
   const errors: FormErrors = {};
   const accountError = validateAccount(values.account);
   if (accountError) errors.account = accountError;
@@ -260,6 +319,13 @@ function validateForm(mode: AuthMode, values: FormValues) {
       errors.confirmPassword = "请再次输入密码。";
     } else if (values.confirmPassword !== values.password) {
       errors.confirmPassword = "两次输入的密码不一致。";
+    }
+    if (requireVerificationCode) {
+      if (!values.verificationCode.trim()) {
+        errors.verificationCode = "请输入邮箱验证码。";
+      } else if (!/^\d{6}$/.test(values.verificationCode.trim())) {
+        errors.verificationCode = "请输入 6 位数字验证码。";
+      }
     }
   }
 

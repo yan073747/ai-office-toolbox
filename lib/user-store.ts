@@ -7,6 +7,7 @@ export type LocalUser = {
   createdAt?: string;
   planName: string;
   role?: string;
+  isVerified?: boolean;
 };
 
 export type UsageRecord = {
@@ -63,7 +64,16 @@ export async function registerUser(email: string, password: string, confirmPassw
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, confirmPassword })
   });
-  const data = await readJsonResponse<{ user: LocalUser }>(response);
+  return readJsonResponse<{ email: string; message?: string; user?: LocalUser }>(response);
+}
+
+export async function verifyRegisteredUser(email: string, code: string) {
+  const response = await fetch("/api/auth/register/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code })
+  });
+  const data = await readJsonResponse<{ user: LocalUser; message?: string }>(response);
   emitUserUpdated();
   return data.user;
 }

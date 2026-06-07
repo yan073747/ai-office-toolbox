@@ -80,6 +80,9 @@ export async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ ok: false, message: "请先登录后查看使用概览。" }, { status: 401 });
     }
+    if (!user.isVerified) {
+      return NextResponse.json({ ok: false, message: "请先完成邮箱验证后查看使用概览。" }, { status: 403 });
+    }
 
     const rangeDays = parseRangeDays(request.url);
     const startDate = rangeDays === "all" ? undefined : startOfDay(new Date());
