@@ -16,6 +16,9 @@ model User {
   email        String               @unique
   passwordHash String               @map("password_hash")
   role         String               @default("user")
+  currentPlan  String?              @map("current_plan")
+  remainingQuota Int                @default(0) @map("remaining_quota")
+  planExpiry   DateTime?            @map("plan_expiry")
   createdAt    DateTime             @default(now()) @map("created_at")
   updatedAt    DateTime             @updatedAt @map("updated_at")
   quota        UserQuota?
@@ -136,17 +139,27 @@ model Subscription {
 model Order {
   id              String    @id @default(cuid())
   userId          String    @map("user_id")
+  userEmail       String    @map("user_email")
   planName        String    @map("plan_name")
+  planPrice       Float     @map("plan_price")
+  planCount       Int       @map("plan_count")
+  status          String    @default("pending")
   amount          Decimal
   quotaAmount     Int       @map("quota_amount")
   paymentProvider String    @map("payment_provider")
   paymentStatus   String    @default("pending") @map("payment_status")
+  paymentMethod   String?   @map("payment_method")
+  paymentTime     DateTime? @map("payment_time")
+  paymentScreenshot String? @map("payment_screenshot")
   paymentTradeNo  String?   @map("payment_trade_no")
   createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
   paidAt          DateTime? @map("paid_at")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([status, createdAt])
   @@index([paymentStatus])
   @@index([paymentTradeNo])
   @@map("orders")

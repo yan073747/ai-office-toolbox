@@ -10,11 +10,97 @@ async function requireAdmin() {
   return null;
 }
 
+function getPlanExpiry(durationDays: number) {
+  return new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+}
+
 export async function POST(request: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   const body = await request.json().catch(() => ({}));
+  const orderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
+
+  if (orderId) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        userEmail: true,
+        planName: true,
+        planCount: true,
+        status: true,
+        paymentMethod: true
+      }
+    });
+    if (!order) {
+      return NextResponse.json({ ok: false, message: "订单不存在。" }, { status: 404 });
+    }
+    if (order.status === "paid") {
+      return NextResponse.json({ ok: false, message: "订单已确认收款，请勿重复开通。" }, { status: 409 });
+    }
+    if (order.status !== "claimed_paid" && order.status !== "pending") {
+      return NextResponse.json({ ok: false, message: "订单状态不可确认收款。" }, { status: 400 });
+    }
+
+    const plan = PLAN_DEFINITIONS.find((item) => item.name === order.planName && item.credits === order.planCount) || PLAN_DEFINITIONS.find((item) => item.credits === order.planCount);
+    if (!plan) {
+      return NextResponse.json({ ok: false, message: "订单套餐无法匹配，请检查套餐配置。" }, { status: 400 });
+    }
+
+    const expiresAt = getPlanExpiry(plan.durationDays);
+    const result = await prisma.$transaction(async (tx) => {
+      const subscription = await tx.subscription.create({
+        data: {
+          userId: order.userId,
+          plan: plan.id,
+          status: "active",
+          credits: plan.credits,
+          expiresAt
+        }
+      });
+
+      const updatedOrder = await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "paid",
+          paymentStatus: "paid",
+          paidAt: new Date()
+        }
+      });
+
+      await tx.user.update({
+        where: { id: order.userId },
+        data: {
+          currentPlan: plan.id,
+          remainingQuota: plan.credits,
+          planExpiry: expiresAt
+        }
+      });
+
+      return { subscription, order: updatedOrder };
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: "已确认收款，套餐已开通。",
+      order: {
+        id: result.order.id,
+        status: result.order.status,
+        paidAt: result.order.paidAt?.toISOString() || null
+      },
+      subscription: {
+        id: result.subscription.id,
+        userId: result.subscription.userId,
+        plan: result.subscription.plan,
+        status: result.subscription.status,
+        credits: result.subscription.credits,
+        expiresAt: result.subscription.expiresAt?.toISOString() || null
+      }
+    });
+  }
+
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const plan = getPlanDefinition(String(body.plan || ""));
   if (!email || !plan) {
@@ -36,15 +122,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "用户不存在。" }, { status: 404 });
   }
 
-  const expiresAt = plan.durationDays ? new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000) : null;
-  const subscription = await prisma.subscription.create({
-    data: {
-      userId: targetUser.id,
-      plan: plan.id,
-      status: "active",
-      credits: plan.unlimited ? -1 : plan.credits,
-      expiresAt
-    }
+  const expiresAt = getPlanExpiry(plan.durationDays);
+  const subscription = await prisma.$transaction(async (tx) => {
+    const nextSubscription = await tx.subscription.create({
+      data: {
+        userId: targetUser.id,
+        plan: plan.id,
+        status: "active",
+        credits: plan.credits,
+        expiresAt
+      }
+    });
+    await tx.user.update({
+      where: { id: targetUser.id },
+      data: {
+        currentPlan: plan.id,
+        remainingQuota: plan.credits,
+        planExpiry: expiresAt
+      }
+    });
+    return nextSubscription;
   });
 
   return NextResponse.json({

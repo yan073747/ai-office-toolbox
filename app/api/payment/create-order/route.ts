@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         message: "套餐不存在。",
-        plans: PLAN_DEFINITIONS.map((item) => ({ id: item.id, name: item.name, price: item.price }))
+        plans: PLAN_DEFINITIONS.map((item) => ({ id: item.id, name: item.name, price: item.price, credits: item.credits }))
       },
       { status: 400 }
     );
@@ -25,9 +25,13 @@ export async function POST(request: Request) {
   const order = await prisma.order.create({
     data: {
       userId: user.id,
+      userEmail: user.email,
       planName: plan.name,
+      planPrice: plan.price,
+      planCount: plan.credits,
+      status: "pending",
       amount: plan.price,
-      quotaAmount: plan.unlimited ? 0 : plan.credits,
+      quotaAmount: plan.credits,
       paymentProvider: "manual",
       paymentStatus: "pending"
     }
@@ -35,16 +39,16 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    mode: "payment-provider-not-connected",
     order: {
       id: order.id,
+      userEmail: order.userEmail,
       planName: order.planName,
-      amount: order.amount.toString(),
-      quotaAmount: order.quotaAmount,
-      paymentProvider: order.paymentProvider,
-      paymentStatus: order.paymentStatus,
+      planPrice: order.planPrice,
+      planCount: order.planCount,
+      status: order.status,
       createdAt: order.createdAt.toISOString()
     },
-    message: "订单已创建。当前版本尚未接入真实支付回调，请联系作者开通套餐。"
+    paymentUrl: `/payment/${order.id}`,
+    message: "订单已创建，请扫码付款后提交付款信息。"
   });
 }

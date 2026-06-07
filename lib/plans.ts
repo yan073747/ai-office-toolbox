@@ -12,8 +12,7 @@ export type PlanDefinition = {
   name: string;
   price: number;
   credits: number;
-  durationDays?: number;
-  unlimited?: boolean;
+  durationDays: number;
 };
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
@@ -29,23 +28,24 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
 export const PLAN_DEFINITIONS: PlanDefinition[] = [
   {
     id: "basic",
-    name: "基础版",
+    name: "体验套餐",
     price: 9.9,
-    credits: 20
+    credits: 20,
+    durationDays: 30
   },
   {
     id: "standard",
-    name: "标准版",
-    price: 29.9,
-    credits: 100
+    name: "标准套餐",
+    price: 19.9,
+    credits: 50,
+    durationDays: 30
   },
   {
     id: "pro",
-    name: "高级版",
-    price: 99,
-    credits: -1,
-    durationDays: 30,
-    unlimited: true
+    name: "高级套餐",
+    price: 49.9,
+    credits: 150,
+    durationDays: 30
   }
 ];
 

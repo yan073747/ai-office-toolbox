@@ -44,8 +44,20 @@ export async function GET(request: Request) {
     const rows = await prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
     filename = "orders-admin.csv";
     csv = toCsv(
-      ["时间", "用户ID", "套餐", "金额", "额度", "支付方式", "支付状态", "支付时间"],
-      rows.map((row) => [row.createdAt.toISOString(), row.userId, row.planName, row.amount.toString(), row.quotaAmount, row.paymentProvider, row.paymentStatus, row.paidAt?.toISOString()])
+      ["时间", "订单号", "用户ID", "用户邮箱", "套餐", "金额", "次数", "订单状态", "付款方式", "用户付款时间", "确认收款时间"],
+      rows.map((row) => [
+        row.createdAt.toISOString(),
+        row.id,
+        row.userId,
+        row.userEmail,
+        row.planName,
+        row.planPrice,
+        row.planCount,
+        row.status,
+        row.paymentMethod || row.paymentProvider,
+        row.paymentTime?.toISOString(),
+        row.paidAt?.toISOString()
+      ])
     );
   } else {
     const rows = await prisma.user.findMany({

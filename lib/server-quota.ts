@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export const FREE_LIMIT_REACHED_CODE = "FREE_LIMIT_REACHED";
 export const FREE_LIMIT_REACHED_MESSAGE = "免费次数已用完，请购买套餐继续使用";
+export const SUBSCRIPTION_QUOTA_REACHED_MESSAGE = "套餐余额不足，请充值";
 
 export type ServerQuota = {
   userId: string;
@@ -46,7 +47,7 @@ export type ServerToolAccess = {
 
 export type ServerToolUseCheck = {
   canUse: boolean;
-  reason: "not_logged_in" | "free_limit_reached" | "ok";
+  reason: "not_logged_in" | "free_limit_reached" | "subscription_quota_reached" | "ok";
   code?: string;
   message: string;
   quota?: ServerQuota;
@@ -81,7 +82,7 @@ function toSubscriptionSummary(subscription: {
     planName: plan?.name || subscription.plan,
     status: subscription.status,
     credits: subscription.credits,
-    unlimited: Boolean(plan?.unlimited || subscription.credits < 0),
+    unlimited: false,
     expiresAt: subscription.expiresAt ? subscription.expiresAt.toISOString() : null
   };
 }
@@ -146,14 +147,13 @@ export async function getServerQuota(userId: string): Promise<ServerQuota> {
 
   const freeTotal = freeUsage.reduce((total, item) => total + item.total, 0);
   const freeRemaining = freeUsage.reduce((total, item) => total + item.remaining, 0);
-  const subscriptionCredits = subscription && subscription.credits > 0 ? subscription.credits : 0;
-  const isUnlimited = subscription ? Boolean(getPlanDefinition(subscription.plan)?.unlimited || subscription.credits < 0) : false;
+  const subscriptionCredits = subscription?.credits || 0;
 
   return {
     userId,
-    totalQuota: isUnlimited ? freeTotal : freeTotal + subscriptionCredits,
+    totalQuota: freeTotal + subscriptionCredits,
     usedQuota: successfulCount,
-    remainingQuota: isUnlimited ? 999999 : freeRemaining + subscriptionCredits,
+    remainingQuota: freeRemaining + subscriptionCredits,
     updatedAt: nowIso()
   };
 }
@@ -189,31 +189,27 @@ export async function canUseToolServer(userId: string | null, toolInfo?: ServerT
     };
   }
 
-  if (subscription) {
-    const plan = getPlanDefinition(subscription.plan);
-    const unlimited = Boolean(plan?.unlimited || subscription.credits < 0);
-    if (unlimited || subscription.credits > 0) {
-      return {
-        canUse: true,
-        reason: "ok",
-        message: "可以使用",
-        quota,
-        freeUsage,
-        subscription: toSubscriptionSummary(subscription),
-        access: {
-          source: "subscription",
-          subscriptionId: subscription.id,
-          unlimited
-        }
-      };
-    }
+  if (subscription && subscription.credits > 0) {
+    return {
+      canUse: true,
+      reason: "ok",
+      message: "可以使用",
+      quota,
+      freeUsage,
+      subscription: toSubscriptionSummary(subscription),
+      access: {
+        source: "subscription",
+        subscriptionId: subscription.id,
+        unlimited: false
+      }
+    };
   }
 
   return {
     canUse: false,
-    reason: "free_limit_reached",
+    reason: subscription ? "subscription_quota_reached" : "free_limit_reached",
     code: FREE_LIMIT_REACHED_CODE,
-    message: FREE_LIMIT_REACHED_MESSAGE,
+    message: subscription ? SUBSCRIPTION_QUOTA_REACHED_MESSAGE : FREE_LIMIT_REACHED_MESSAGE,
     quota,
     freeUsage,
     subscription: subscription ? toSubscriptionSummary(subscription) : null
@@ -222,7 +218,7 @@ export async function canUseToolServer(userId: string | null, toolInfo?: ServerT
 
 export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: ServerToolInfo, access?: ServerToolAccess) {
   return prisma.$transaction(async (tx) => {
-    if (access?.source === "subscription" && access.subscriptionId && !access.unlimited) {
+    if (access?.source === "subscription" && access.subscriptionId) {
       const updated = await tx.subscription.updateMany({
         where: {
           id: access.subscriptionId,
@@ -239,6 +235,15 @@ export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: Ser
       if (updated.count === 0) {
         throw new Error("Subscription credits are not available.");
       }
+
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          remainingQuota: {
+            decrement: 1
+          }
+        }
+      });
     }
 
     return tx.usageRecord.create({
@@ -265,6 +270,15 @@ export async function addQuotaAfterPayment(userId: string, amount: number, order
       plan: "manual",
       status: "active",
       credits: amount
+    }
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      currentPlan: "manual",
+      remainingQuota: amount,
+      planExpiry: null
     }
   });
 

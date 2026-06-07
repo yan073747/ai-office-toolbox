@@ -74,12 +74,20 @@ export async function GET() {
       select: {
         id: true,
         userId: true,
+        userEmail: true,
         planName: true,
+        planPrice: true,
+        planCount: true,
+        status: true,
         amount: true,
         quotaAmount: true,
         paymentStatus: true,
         paymentProvider: true,
+        paymentMethod: true,
+        paymentTime: true,
+        paymentScreenshot: true,
         createdAt: true,
+        updatedAt: true,
         paidAt: true
       }
     }),

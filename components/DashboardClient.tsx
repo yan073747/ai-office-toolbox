@@ -14,7 +14,6 @@ import {
   UserCircle,
   X
 } from "lucide-react";
-import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
 import { logoutUser } from "@/lib/user-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -96,6 +95,18 @@ type RecordsResponse = {
   pageSize: number;
   total: number;
   totalPages: number;
+};
+
+type UserOrder = {
+  id: string;
+  planName: string;
+  planPrice: number;
+  planCount: number;
+  status: string;
+  paymentMethod: string | null;
+  paymentTime: string | null;
+  createdAt: string;
+  paidAt: string | null;
 };
 
 const navItems: NavItem[] = [
@@ -882,11 +893,69 @@ function Pagination({ page, totalPages, total, onPageChange }: { page: number; t
 }
 
 function OrdersPanel() {
+  const [orders, setOrders] = useState<UserOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadOrders() {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch("/api/payment/orders", { cache: "no-store" });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data?.ok === false) {
+          setError(data?.message || "订单加载失败。");
+          return;
+        }
+        setOrders(data.orders || []);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadOrders();
+  }, []);
+
+  if (loading) {
+    return <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">正在加载订单...</div>;
+  }
+
+  if (error) {
+    return <div className="rounded-2xl border border-red-100 bg-red-50 px-6 py-12 text-center text-sm font-semibold text-red-700">{error}</div>;
+  }
+
+  if (!orders.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center">
+        <p className="text-lg font-semibold text-slate-950">暂无订单</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">购买套餐后，订单会显示在这里。</p>
+        <Link href="/pricing" className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white">
+          查看套餐
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center">
-      <p className="text-lg font-semibold text-slate-950">暂无订单</p>
-      <p className="mt-2 text-sm leading-6 text-slate-500">支付功能尚未上线，后续会在这里展示真实订单。</p>
-    </div>
+    <DataTable
+      headers={["创建时间", "套餐", "金额", "次数", "状态", "付款方式", "操作"]}
+      rows={orders.map((order) => [
+        formatDateTime(order.createdAt),
+        order.planName,
+        `￥${Number(order.planPrice).toFixed(1)}`,
+        `${order.planCount} 次`,
+        <StatusBadge key="status" status={formatOrderStatus(order.status)} />,
+        formatPaymentMethod(order.paymentMethod),
+        order.status === "paid" ? (
+          <span key="done" className="font-semibold text-emerald-700">已开通</span>
+        ) : (
+          <Link key="pay" href={`/payment/${order.id}`} className="font-semibold text-blue-700 hover:underline">
+            查看/提交付款
+          </Link>
+        )
+      ])}
+    />
   );
 }
 
@@ -968,8 +1037,14 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<Rea
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const success = status === "已完成";
-  return <span className={success ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" : "rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700"}>{status}</span>;
+  const success = status === "已完成" || status === "已确认收款";
+  const pending = status === "待付款" || status === "待确认";
+  const className = success
+    ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
+    : pending
+      ? "rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700"
+      : "rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700";
+  return <span className={className}>{status}</span>;
 }
 
 function ReadonlyField({ label, value }: { label: string; value: string }) {
@@ -982,14 +1057,6 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
 }
 
 function PaymentPlaceholderModal({ onClose }: { onClose: () => void }) {
-  const [copied, setCopied] = useState<"email" | "douyin" | null>(null);
-
-  async function copyText(value: string, target: "email" | "douyin") {
-    await navigator.clipboard.writeText(value);
-    setCopied(target);
-    window.setTimeout(() => setCopied(null), 1600);
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
@@ -1001,27 +1068,17 @@ function PaymentPlaceholderModal({ onClose }: { onClose: () => void }) {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h2 className="mt-5 text-xl font-semibold text-slate-950">支付系统暂未接入</h2>
+        <h2 className="mt-5 text-xl font-semibold text-slate-950">购买套餐继续使用</h2>
         <p className="mt-3 text-sm leading-7 text-slate-600">
-          支付系统暂未接入。如需继续体验、开通更多额度或定制专属 AI 工具，请通过联系页、邮箱或抖音联系作者。
+          当前支持人工支付确认。选择套餐后会生成订单，你可以扫码付款并提交付款信息，管理员确认后自动开通额度。
         </p>
-        <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-          <p>邮箱：<span className="font-semibold text-slate-950">{AUTHOR_EMAIL}</span></p>
-          <p className="mt-1">抖音号：<span className="font-semibold text-slate-950">{AUTHOR_DOUYIN_ID}</span></p>
-        </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+          <Link href="/pricing" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+            查看套餐
+          </Link>
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
             联系定制
           </Link>
-          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            发送邮件
-          </a>
-          <button type="button" onClick={() => copyText(AUTHOR_EMAIL, "email")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            {copied === "email" ? "已复制" : "复制邮箱"}
-          </button>
-          <button type="button" onClick={() => copyText(AUTHOR_DOUYIN_ID, "douyin")} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
-            {copied === "douyin" ? "已复制" : "复制抖音号"}
-          </button>
         </div>
         <button type="button" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50">
           关闭
@@ -1036,6 +1093,20 @@ function getDateFrom(rangeDays: RecordRange) {
   const date = new Date();
   date.setDate(date.getDate() - rangeDays + 1);
   return date.toISOString().slice(0, 10);
+}
+
+function formatOrderStatus(status: string) {
+  if (status === "pending") return "待付款";
+  if (status === "claimed_paid") return "待确认";
+  if (status === "paid") return "已确认收款";
+  return status;
+}
+
+function formatPaymentMethod(value: string | null) {
+  if (value === "wechat") return "微信";
+  if (value === "alipay") return "支付宝";
+  if (value === "manual") return "人工";
+  return "-";
 }
 
 function rangeLabel(rangeDays: RangeDays) {
