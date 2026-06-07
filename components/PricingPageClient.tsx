@@ -1,10 +1,10 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, HelpCircle, Loader2, Sparkles } from "lucide-react";
-import SmartEntryLink from "@/components/SmartEntryLink";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import SmartEntryLink from "@/components/SmartEntryLink";
 
 type Plan = {
   id: "basic" | "standard" | "pro";
@@ -31,7 +31,7 @@ const plans: Plan[] = [
     price: "19.9 元",
     count: "50 次",
     description: "适合稳定使用 AI 办公工具的个人或小团队。",
-    features: ["50 次工具调用", "支持全部 7 个工具", "支持 Dashboard 统计", "30 天有效"],
+    features: ["50 次工具调用", "支持全部 7 个工具", "支持个人中心统计", "30 天有效"],
     featured: true
   },
   {
@@ -39,7 +39,7 @@ const plans: Plan[] = [
     name: "高级套餐",
     price: "49.9 元",
     count: "150 次",
-    description: "适合高频使用和连续处理任务。",
+    description: "适合高频使用和连续处理办公任务。",
     features: ["150 次工具调用", "支持全部 7 个工具", "适合高频文档处理", "30 天有效"]
   }
 ];
@@ -96,9 +96,7 @@ export default function PricingPageClient() {
             <Sparkles className="h-4 w-4 text-blue-600" />
             首次免费，套餐按次购买
           </div>
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-6xl">
-            AI 办公工具箱套餐
-          </h1>
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-6xl">AI 办公工具箱套餐</h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
             新用户每个工具可免费体验 1 次。免费次数用完后，可购买套餐继续使用。当前采用人工支付确认，付款后管理员确认即可开通。
           </p>
@@ -145,9 +143,7 @@ export default function PricingPageClient() {
             </article>
           ))}
         </div>
-        {orderMessage ? (
-          <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm leading-6 text-red-700">{orderMessage}</div>
-        ) : null}
+        {orderMessage ? <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm leading-6 text-red-700">{orderMessage}</div> : null}
       </section>
 
       <section className="border-y border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">

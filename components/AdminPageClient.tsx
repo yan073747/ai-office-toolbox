@@ -123,6 +123,10 @@ export default function AdminPageClient() {
   const [usersExpanded, setUsersExpanded] = useState(false);
   const [contactsExpanded, setContactsExpanded] = useState(false);
   const [orderFilter, setOrderFilter] = useState("pending_review");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [deletingOrders, setDeletingOrders] = useState(false);
+  const [deletingContacts, setDeletingContacts] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [userUsage, setUserUsage] = useState<UserUsageDetail | null>(null);
   const [userUsageLoading, setUserUsageLoading] = useState(false);
@@ -141,6 +145,14 @@ export default function AdminPageClient() {
     if (orderFilter === "pending_review") return orders.filter((order) => order.status === "pending" || order.status === "claimed_paid");
     return orders.filter((order) => order.status === orderFilter);
   }, [orderFilter, summary?.orders]);
+
+  useEffect(() => {
+    setSelectedOrderIds((ids) => ids.filter((id) => filteredOrders.some((order) => order.id === id && order.status === "pending")));
+  }, [filteredOrders]);
+
+  useEffect(() => {
+    setSelectedContactIds((ids) => ids.filter((id) => visibleContacts.some((contact) => contact.id === id)));
+  }, [visibleContacts]);
 
   async function loadSummary() {
     setLoading(true);
@@ -222,6 +234,48 @@ export default function AdminPageClient() {
     }
   }
 
+  async function deleteSelectedOrders() {
+    if (!selectedOrderIds.length) return;
+    setDeletingOrders(true);
+    setGrantMessage("");
+    try {
+      const response = await fetch("/api/admin/orders/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedOrderIds })
+      });
+      const data = await response.json().catch(() => ({}));
+      setGrantMessage(data?.message || (response.ok ? "订单已删除。" : "订单删除失败。"));
+      if (response.ok && data?.ok !== false) {
+        setSelectedOrderIds([]);
+        await loadSummary();
+      }
+    } finally {
+      setDeletingOrders(false);
+    }
+  }
+
+  async function deleteSelectedContacts() {
+    if (!selectedContactIds.length) return;
+    setDeletingContacts(true);
+    setGrantMessage("");
+    try {
+      const response = await fetch("/api/admin/contacts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedContactIds })
+      });
+      const data = await response.json().catch(() => ({}));
+      setGrantMessage(data?.message || (response.ok ? "联系表单已删除。" : "联系表单删除失败。"));
+      if (response.ok && data?.ok !== false) {
+        setSelectedContactIds([]);
+        await loadSummary();
+      }
+    } finally {
+      setDeletingContacts(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-8 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -232,7 +286,7 @@ export default function AdminPageClient() {
             <p className="mt-2 text-sm text-slate-500">查看用户、联系表单、订单、套餐和使用数据。</p>
           </div>
           <Link href="/dashboard" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800">
-            返回 Dashboard
+            返回个人中心
           </Link>
         </div>
 
@@ -259,7 +313,7 @@ export default function AdminPageClient() {
 
             {grantMessage ? <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-semibold text-blue-800">{grantMessage}</div> : null}
 
-            <Section title="订单管理" description="优先处理待付款和用户已提交付款的订单。管理员确认收款后会自动开通套餐。">
+            <Section title="订单管理" description="优先处理待付款和用户已提交付款的订单。只有待付款订单可以批量删除，已提交付款和已确认订单不会被删除。">
               <div className="mb-4 flex flex-wrap gap-2">
                 {[
                   ["pending_review", "待处理"],
@@ -278,7 +332,19 @@ export default function AdminPageClient() {
                   </button>
                 ))}
               </div>
-              <OrderTable orders={filteredOrders} confirmingOrderId={confirmingOrderId} onConfirm={confirmOrder} />
+              <BulkToolbar
+                count={selectedOrderIds.length}
+                buttonText={deletingOrders ? "删除中..." : "删除选中待付款订单"}
+                disabled={!selectedOrderIds.length || deletingOrders}
+                onDelete={deleteSelectedOrders}
+              />
+              <OrderTable
+                orders={filteredOrders}
+                selectedIds={selectedOrderIds}
+                onSelectionChange={setSelectedOrderIds}
+                confirmingOrderId={confirmingOrderId}
+                onConfirm={confirmOrder}
+              />
             </Section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -320,10 +386,16 @@ export default function AdminPageClient() {
 
             <Section
               title="联系表单"
-              description={`默认显示最近 ${previewLimit} 条联系记录，可展开查看已加载的历史记录。`}
+              description={`默认显示最近 ${previewLimit} 条联系记录，可展开查看已加载的历史记录。删除只影响本地 Neon 数据，不会删除飞书多维表格中的记录。`}
               action={summary.contacts.length > previewLimit ? <ToggleButton expanded={contactsExpanded} onClick={() => setContactsExpanded((value) => !value)} /> : null}
             >
-              <ContactTable contacts={visibleContacts} />
+              <BulkToolbar
+                count={selectedContactIds.length}
+                buttonText={deletingContacts ? "删除中..." : "删除选中联系表单"}
+                disabled={!selectedContactIds.length || deletingContacts}
+                onDelete={deleteSelectedContacts}
+              />
+              <ContactTable contacts={visibleContacts} selectedIds={selectedContactIds} onSelectionChange={setSelectedContactIds} />
             </Section>
           </div>
         ) : null}
@@ -353,6 +425,17 @@ function Section({ title, description, action, children }: { title: string; desc
       </div>
       <div className="mt-4 overflow-x-auto">{children}</div>
     </section>
+  );
+}
+
+function BulkToolbar({ count, buttonText, disabled, onDelete }: { count: number; buttonText: string; disabled: boolean; onDelete: () => void }) {
+  return (
+    <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+      <span>已选中 {count} 条</span>
+      <button type="button" disabled={disabled} onClick={onDelete} className="inline-flex h-9 items-center justify-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+        {buttonText}
+      </button>
+    </div>
   );
 }
 
@@ -392,12 +475,38 @@ function UserTable({ users, selectedUserId, onInspect }: { users: AdminUser[]; s
   );
 }
 
-function ContactTable({ contacts }: { contacts: AdminContact[] }) {
+function ContactTable({ contacts, selectedIds, onSelectionChange }: { contacts: AdminContact[]; selectedIds: string[]; onSelectionChange: (ids: string[]) => void }) {
+  const allIds = contacts.map((item) => item.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.includes(id));
+
+  function toggleAll(checked: boolean) {
+    onSelectionChange(checked ? allIds : []);
+  }
+
+  function toggleOne(id: string, checked: boolean) {
+    onSelectionChange(checked ? Array.from(new Set([...selectedIds, id])) : selectedIds.filter((item) => item !== id));
+  }
+
   return (
-    <SimpleTable headers={["时间", "姓名", "公司", "手机", "微信", "邮箱", "行业", "预算"]}>
+    <SimpleTable
+      headers={[
+        <input key="select" type="checkbox" checked={allSelected} onChange={(event) => toggleAll(event.target.checked)} aria-label="全选联系表单" />,
+        "时间",
+        "姓名",
+        "公司",
+        "手机",
+        "微信",
+        "邮箱",
+        "行业",
+        "预算"
+      ]}
+    >
       {contacts.length ? (
         contacts.map((item) => (
           <tr key={item.id} className="border-b border-slate-100 last:border-b-0">
+            <td className="py-3 pr-4">
+              <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={(event) => toggleOne(item.id, event.target.checked)} aria-label={`选择联系表单 ${item.name}`} />
+            </td>
             <td className="py-3 pr-4 text-slate-700">{formatDate(item.createdAt)}</td>
             <td className="py-3 pr-4 font-semibold text-slate-900">{item.name}</td>
             <td className="py-3 pr-4 text-slate-700">{item.company || "-"}</td>
@@ -409,7 +518,7 @@ function ContactTable({ contacts }: { contacts: AdminContact[] }) {
           </tr>
         ))
       ) : (
-        <EmptyRow colSpan={8} />
+        <EmptyRow colSpan={9} />
       )}
     </SimpleTable>
   );
@@ -472,41 +581,98 @@ function UserUsageDetailPanel({ detail, onPageChange }: { detail: UserUsageDetai
   );
 }
 
-function OrderTable({ orders, confirmingOrderId, onConfirm }: { orders: AdminOrder[]; confirmingOrderId: string; onConfirm: (orderId: string) => void }) {
+function OrderTable({
+  orders,
+  selectedIds,
+  onSelectionChange,
+  confirmingOrderId,
+  onConfirm
+}: {
+  orders: AdminOrder[];
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+  confirmingOrderId: string;
+  onConfirm: (orderId: string) => void;
+}) {
+  const selectableIds = orders.filter((order) => order.status === "pending").map((order) => order.id);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.includes(id));
+
+  function toggleAll(checked: boolean) {
+    onSelectionChange(checked ? selectableIds : []);
+  }
+
+  function toggleOne(id: string, checked: boolean) {
+    onSelectionChange(checked ? Array.from(new Set([...selectedIds, id])) : selectedIds.filter((item) => item !== id));
+  }
+
   return (
-    <SimpleTable headers={["创建时间", "用户邮箱", "套餐", "金额", "状态", "付款方式", "付款截图", "操作"]}>
+    <SimpleTable
+      headers={[
+        <input key="select" type="checkbox" checked={allSelected} disabled={!selectableIds.length} onChange={(event) => toggleAll(event.target.checked)} aria-label="全选待付款订单" />,
+        "创建订单时间",
+        "付款时间",
+        "用户邮箱",
+        "套餐",
+        "金额",
+        "状态",
+        "付款方式",
+        "付款截图",
+        "操作"
+      ]}
+    >
       {orders.length ? (
-        orders.map((order) => (
-          <tr key={order.id} className="border-b border-slate-100 last:border-b-0">
-            <td className="py-3 pr-4 text-slate-700">{formatDate(order.createdAt)}</td>
-            <td className="py-3 pr-4 font-semibold text-slate-900">{order.userEmail}</td>
-            <td className="py-3 pr-4 text-slate-700">{order.planName} / {order.planCount} 次</td>
-            <td className="py-3 pr-4 text-slate-700">￥{Number(order.planPrice).toFixed(1)}</td>
-            <td className="py-3 pr-4 text-slate-700"><StatusBadge status={order.status} /></td>
-            <td className="py-3 pr-4 text-slate-700">{formatPaymentMethod(order.paymentMethod || order.paymentProvider)}</td>
-            <td className="py-3 pr-4 text-slate-700">
-              {order.paymentScreenshot ? (
-                <a href={order.paymentScreenshot} target="_blank" rel="noreferrer" className="font-semibold text-blue-700 hover:underline">查看截图</a>
-              ) : "-"}
-            </td>
-            <td className="py-3 pr-4">
-              {order.status === "paid" ? (
-                <span className="text-sm font-semibold text-emerald-700">已开通</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onConfirm(order.id)}
-                  disabled={confirmingOrderId === order.id}
-                  className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-950 px-3 text-xs font-semibold text-white disabled:opacity-60"
-                >
-                  {confirmingOrderId === order.id ? "确认中..." : "确认收款"}
-                </button>
-              )}
-            </td>
-          </tr>
-        ))
+        orders.map((order) => {
+          const selectable = order.status === "pending";
+          return (
+            <tr key={order.id} className="border-b border-slate-100 last:border-b-0">
+              <td className="py-3 pr-4">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(order.id)}
+                  disabled={!selectable}
+                  onChange={(event) => toggleOne(order.id, event.target.checked)}
+                  aria-label={`选择订单 ${order.id}`}
+                />
+              </td>
+              <td className="py-3 pr-4 text-slate-700">{formatDate(order.createdAt)}</td>
+              <td className="py-3 pr-4 text-slate-700">{order.paymentTime ? formatDate(order.paymentTime) : "-"}</td>
+              <td className="py-3 pr-4 font-semibold text-slate-900">{order.userEmail}</td>
+              <td className="py-3 pr-4 text-slate-700">
+                {order.planName} / {order.planCount} 次
+              </td>
+              <td className="py-3 pr-4 text-slate-700">¥ {Number(order.planPrice).toFixed(1)}</td>
+              <td className="py-3 pr-4 text-slate-700">
+                <StatusBadge status={order.status} />
+              </td>
+              <td className="py-3 pr-4 text-slate-700">{formatPaymentMethod(order.paymentMethod || order.paymentProvider)}</td>
+              <td className="py-3 pr-4 text-slate-700">
+                {order.paymentScreenshot ? (
+                  <a href={order.paymentScreenshot} target="_blank" rel="noreferrer" className="font-semibold text-blue-700 hover:underline">
+                    查看截图
+                  </a>
+                ) : (
+                  "-"
+                )}
+              </td>
+              <td className="py-3 pr-4">
+                {order.status === "paid" ? (
+                  <span className="text-sm font-semibold text-emerald-700">已开通</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onConfirm(order.id)}
+                    disabled={confirmingOrderId === order.id}
+                    className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-950 px-3 text-xs font-semibold text-white disabled:opacity-60"
+                  >
+                    {confirmingOrderId === order.id ? "确认中..." : "确认收款"}
+                  </button>
+                )}
+              </td>
+            </tr>
+          );
+        })
       ) : (
-        <EmptyRow colSpan={8} />
+        <EmptyRow colSpan={10} />
       )}
     </SimpleTable>
   );
@@ -523,13 +689,13 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>{label}</span>;
 }
 
-function SimpleTable({ headers, children }: { headers: string[]; children: ReactNode }) {
+function SimpleTable({ headers, children }: { headers: ReactNode[]; children: ReactNode }) {
   return (
     <table className="w-full min-w-[900px] border-collapse text-sm">
       <thead>
         <tr className="border-b border-slate-200 text-left text-slate-500">
-          {headers.map((header) => (
-            <th key={header} className="py-3 pr-4 font-semibold">
+          {headers.map((header, index) => (
+            <th key={typeof header === "string" ? header : index} className="py-3 pr-4 font-semibold">
               {header}
             </th>
           ))}

@@ -12,11 +12,6 @@ function normalizePaymentMethod(value: string) {
   return next;
 }
 
-function parsePaymentTime(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
 async function fileToDataUrl(file: File, orderId: string) {
   if (!file.size) return null;
   if (file.size > MAX_SCREENSHOT_BYTES) {
@@ -42,8 +37,6 @@ export async function POST(request: Request) {
   const orderId = String(formData.get("orderId") || "").trim();
   const userEmail = String(formData.get("userEmail") || "").trim().toLowerCase();
   const paymentMethod = normalizePaymentMethod(String(formData.get("paymentMethod") || ""));
-  const paymentTimeText = String(formData.get("paymentTime") || "");
-  const paymentTime = parsePaymentTime(paymentTimeText);
   const screenshot = formData.get("paymentScreenshot");
 
   if (!orderId) {
@@ -54,9 +47,6 @@ export async function POST(request: Request) {
   }
   if (!allowedPaymentMethods.has(paymentMethod)) {
     return NextResponse.json({ ok: false, message: "请选择付款方式。" }, { status: 400 });
-  }
-  if (!paymentTime) {
-    return NextResponse.json({ ok: false, message: "请填写有效的付款时间。" }, { status: 400 });
   }
 
   const order = await prisma.order.findUnique({
@@ -82,6 +72,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: error instanceof Error ? error.message : "付款截图处理失败。" }, { status: 400 });
   }
 
+  const paymentTime = new Date();
   const updated = await prisma.order.update({
     where: { id: order.id },
     data: {
