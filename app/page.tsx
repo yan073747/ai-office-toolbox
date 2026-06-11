@@ -492,7 +492,9 @@ export default function Home() {
         </div>
         <div className="mx-auto flex max-w-7xl flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 AI办公工具箱. All rights reserved.</p>
-          <p>Office AI Toolbox</p>
+          <a href="https://openi.cn/" target="_blank" rel="noopener noreferrer" className="transition hover:text-slate-950">
+            OpenI AI时代
+          </a>
         </div>
       </footer>
     </main>
