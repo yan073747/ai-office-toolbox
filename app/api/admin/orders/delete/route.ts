@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "请选择要删除的订单。" }, { status: 400 });
   }
 
-  const existing = await prisma.order.findMany({
+  const existing: Array<{ id: string; status: string }> = await prisma.order.findMany({
     where: { id: { in: uniqueIds } },
     select: { id: true, status: true }
   });

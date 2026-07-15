@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { PLAN_DEFINITIONS, getPlanDefinition } from "@/lib/plans";
 import { getCurrentServerUser } from "@/lib/server-auth";
 import { prisma } from "@/lib/prisma";
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const expiresAt = getPlanExpiry(plan.durationDays);
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const subscription = await tx.subscription.create({
         data: {
           userId: order.userId,
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
   }
 
   const expiresAt = getPlanExpiry(plan.durationDays);
-  const subscription = await prisma.$transaction(async (tx) => {
+  const subscription = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const nextSubscription = await tx.subscription.create({
       data: {
         userId: targetUser.id,

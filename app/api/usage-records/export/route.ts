@@ -3,6 +3,15 @@ import { writeAuditLog } from "@/lib/audit-log";
 import { getCurrentServerUser } from "@/lib/server-auth";
 import { prisma } from "@/lib/prisma";
 
+type UsageExportRecord = {
+  createdAt: Date;
+  toolId: string;
+  toolName: string;
+  status: string;
+  quotaUsed: number;
+  errorMessage: string | null;
+};
+
 function parseDate(value: string | null, endOfDay = false) {
   if (!value) return undefined;
   const date = new Date(value);
@@ -94,7 +103,7 @@ export async function GET(request: Request) {
     });
 
     const headers = ["时间", "工具ID", "工具名称", "状态", "消耗额度", "错误信息"];
-    const rows = records.map((record) => [
+    const rows = (records as UsageExportRecord[]).map((record) => [
       formatCsvTime(record.createdAt),
       record.toolId,
       record.toolName,

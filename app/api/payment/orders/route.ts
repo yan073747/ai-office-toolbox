@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
 import { prisma } from "@/lib/prisma";
 
+type PaymentOrderSummary = Record<string, unknown> & {
+  paymentTime: Date | null;
+  createdAt: Date;
+  paidAt: Date | null;
+};
+
 export async function GET() {
   const user = await getCurrentServerUser();
   if (!user) {
@@ -27,7 +33,7 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
-    orders: orders.map((order) => ({
+    orders: orders.map((order: PaymentOrderSummary) => ({
       ...order,
       paymentTime: order.paymentTime?.toISOString() || null,
       createdAt: order.createdAt.toISOString(),

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
 import { prisma } from "@/lib/prisma";
 
+type AdminOrderSummary = Record<string, unknown> & {
+  amount: { toString(): string };
+};
+
 async function requireAdmin() {
   const user = await getCurrentServerUser();
   if (!user) return { user: null, response: NextResponse.json({ ok: false, message: "请先登录。" }, { status: 401 }) };
@@ -118,7 +122,7 @@ export async function GET() {
     users,
     contacts,
     usageRecords,
-    orders: orders.map((order) => ({ ...order, amount: order.amount.toString() })),
+    orders: orders.map((order: AdminOrderSummary) => ({ ...order, amount: order.amount.toString() })),
     subscriptions
   });
 }

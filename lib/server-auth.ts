@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { createHash, createHmac, randomInt, timingSafeEqual } from "node:crypto";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
@@ -217,7 +217,7 @@ export async function registerUserServer(input: RegisterInput): Promise<AuthResu
             isVerified: true
           }
         })
-      : await prisma.$transaction(async (tx) => {
+      : await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
           const nextUser = await tx.user.create({
             data: {
               email,
@@ -269,8 +269,8 @@ export async function registerUserServer(input: RegisterInput): Promise<AuthResu
       user,
       email: user.email
     };
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "P2002") {
       return { ok: false, status: 409, message: "该邮箱已注册，请直接登录。" };
     }
     return { ok: false, status: 500, message: "注册失败，请稍后重试。" };

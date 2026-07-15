@@ -1,4 +1,5 @@
 import { FREE_USES_PER_TOOL, TOOL_DEFINITIONS, getPlanDefinition, getToolDefinition } from "@/lib/plans";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const FREE_LIMIT_REACHED_CODE = "FREE_LIMIT_REACHED";
@@ -62,6 +63,13 @@ export type ServerOrderInfo = {
   paymentTradeNo?: string;
 };
 
+type ToolUsageGroup = {
+  toolId: string;
+  _count: {
+    _all: number;
+  };
+};
+
 const NOT_LOGGED_IN_MESSAGE = "请先登录后使用";
 const EMAIL_NOT_VERIFIED_MESSAGE = "请先完成邮箱验证后再使用工具。";
 
@@ -103,7 +111,7 @@ export async function getToolFreeUsage(userId: string): Promise<ToolFreeUsage[]>
       _all: true
     }
   });
-  const countByTool = new Map(grouped.map((item) => [item.toolId, item._count._all]));
+  const countByTool = new Map<string, number>((grouped as ToolUsageGroup[]).map((item) => [item.toolId, item._count._all]));
 
   return TOOL_DEFINITIONS.map((tool) => {
     const used = Math.min(countByTool.get(tool.toolId) || 0, FREE_USES_PER_TOOL);
@@ -231,7 +239,7 @@ export async function canUseToolServer(userId: string | null, toolInfo?: ServerT
 }
 
 export async function consumeQuotaAfterToolSuccess(userId: string, toolInfo: ServerToolInfo, access?: ServerToolAccess) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     if (access?.source === "subscription" && access.subscriptionId) {
       const updated = await tx.subscription.updateMany({
         where: {

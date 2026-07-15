@@ -118,11 +118,12 @@ export async function GET(request: Request) {
       })
     ]);
 
-    const trend = rangeDays === "all" ? buildAllTrendBuckets(records) : buildTrendBuckets(rangeDays);
+    const summaryRecords = records as SummaryRecord[];
+    const trend = rangeDays === "all" ? buildAllTrendBuckets(summaryRecords) : buildTrendBuckets(rangeDays);
     const trendByDate = new Map(trend.map((item) => [item.date, item]));
     const byTool = new Map<string, { toolId: string; toolName: string; count: number; quotaUsed: number }>();
 
-    for (const record of records) {
+    for (const record of summaryRecords) {
       const dateKey = toDateKey(record.createdAt);
       const bucket = trendByDate.get(dateKey);
       if (bucket) {
@@ -146,10 +147,10 @@ export async function GET(request: Request) {
       byTool.set(record.toolId, current);
     }
 
-    const totalCalls = records.length;
-    const successfulCalls = records.filter((record) => record.status === "success").length;
+    const totalCalls = summaryRecords.length;
+    const successfulCalls = summaryRecords.filter((record) => record.status === "success").length;
     const failedCalls = totalCalls - successfulCalls;
-    const latestRecord = records[0] || null;
+    const latestRecord = summaryRecords[0] || null;
 
     return NextResponse.json({
       ok: true,
@@ -170,7 +171,7 @@ export async function GET(request: Request) {
         totalCalls,
         successfulCalls,
         failedCalls,
-        quotaUsed: records.reduce((total, record) => total + record.quotaUsed, 0)
+        quotaUsed: summaryRecords.reduce((total, record) => total + record.quotaUsed, 0)
       },
       latestRecord,
       trend,

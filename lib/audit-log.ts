@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type AuditLogLevel = "info" | "warn" | "error";
@@ -26,7 +25,7 @@ function readClientIp(request?: Request) {
   return request.headers.get("x-real-ip") || request.headers.get("cf-connecting-ip") || undefined;
 }
 
-function sanitizeMetadata(metadata?: Record<string, unknown>): Prisma.InputJsonObject | undefined {
+function sanitizeMetadata(metadata?: Record<string, unknown>): Record<string, unknown> | undefined {
   if (!metadata) return undefined;
   const sanitized = Object.fromEntries(
     Object.entries(metadata).filter(([key, value]) => {
@@ -34,7 +33,7 @@ function sanitizeMetadata(metadata?: Record<string, unknown>): Prisma.InputJsonO
       return !/(password|token|secret|apiKey|api_key|fileContent)/i.test(key);
     })
   );
-  return JSON.parse(JSON.stringify(sanitized)) as Prisma.InputJsonObject;
+  return JSON.parse(JSON.stringify(sanitized)) as Record<string, unknown>;
 }
 
 export async function writeAuditLog(input: AuditLogInput) {
