@@ -38,7 +38,7 @@ export const agentDemos: AgentDemo[] = [
     scene: "企业知识库 / 客服工单",
     audience: "面向企业客服、内部知识库、售后支持团队",
     liveUrl: "https://rag-ticket.aiworkbox.cn",
-    deploymentStatus: "pending",
+    deploymentStatus: "deployed",
     sourcePath: "enterprise-rag-ticket-agent",
     readiness: "可面试演示",
     accent: "blue",
