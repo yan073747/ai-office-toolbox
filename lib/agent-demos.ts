@@ -122,7 +122,7 @@ export const agentDemos: AgentDemo[] = [
     scene: "跨境电商 / Listing 优化",
     audience: "面向跨境电商运营、商品上架、广告投放团队",
     liveUrl: "https://listing.aiworkbox.cn",
-    deploymentStatus: "pending",
+    deploymentStatus: "deployed",
     sourcePath: "crossborder-listing-agent",
     readiness: "可面试演示",
     accent: "amber",
