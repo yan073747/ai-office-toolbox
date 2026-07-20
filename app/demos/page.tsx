@@ -155,7 +155,7 @@ export default function AgentDemosPage() {
           <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6">
             <div className="flex items-center gap-2">
               <Route className="h-5 w-5 text-amber-600" />
-              <h2 className="text-base font-semibold text-stone-950">推荐观看顺序</h2>
+              <h2 className="text-base font-semibold text-stone-950">推荐体验顺序</h2>
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
               如果只想快速了解整体能力，建议先从 MCP Agent 进入，再按工程能力逐步展开，而不是逐个随机打开。
