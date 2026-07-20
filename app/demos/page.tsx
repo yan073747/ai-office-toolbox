@@ -54,7 +54,7 @@ const trustNotes = [
   {
     icon: LockKeyhole,
     title: "无需真实密钥",
-    body: "演示优先采用 Mock LLM 或降级数据，适合直接发给面试官在线查看。"
+    body: "演示优先采用 Mock LLM 或降级数据，适合公开在线查看。"
   },
   {
     icon: ClipboardCheck,
@@ -82,12 +82,12 @@ export default function AgentDemosPage() {
       <section className="border-b border-stone-200 bg-[#fffdf8] px-5 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold tracking-normal text-amber-700">面向技术面试的可部署演示项目集</p>
+            <p className="text-sm font-semibold tracking-normal text-amber-700">可部署的 AI Agent 在线演示项目集</p>
             <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-6xl">
               AI Agent 作品集
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">
-              五个项目统一收纳在 aiworkbox.cn 下，面试官可以从一个入口查看业务场景、工程架构、技术栈和真实演示地址。
+              五个项目统一收纳在 aiworkbox.cn 下，访问者可以从一个入口查看业务场景、工程架构、技术栈和真实演示地址。
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {selectedDemo.deploymentStatus === "deployed" ? (
@@ -158,7 +158,7 @@ export default function AgentDemosPage() {
               <h2 className="text-base font-semibold text-stone-950">推荐观看顺序</h2>
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
-              如果面试官只有十分钟，建议先从 MCP Agent 进入，再按工程能力逐步展开，而不是逐个随机打开。
+              如果只想快速了解整体能力，建议先从 MCP Agent 进入，再按工程能力逐步展开，而不是逐个随机打开。
             </p>
             <div className="mt-5 grid gap-3">
               {recommendedJourney.map((item, index) => {
@@ -239,7 +239,7 @@ export default function AgentDemosPage() {
           <aside className="border-b border-stone-200 bg-[#fffaf0] lg:border-b-0 lg:border-r">
             <div className="border-b border-stone-200 px-6 py-5">
               <h2 className="text-base font-semibold text-stone-950">案例索引</h2>
-              <p className="mt-1 text-xs leading-5 text-stone-500">按面试讲解顺序组织，默认展示最贴合办公主站的项目。</p>
+              <p className="mt-1 text-xs leading-5 text-stone-500">按产品能力展开顺序组织，默认展示最贴合办公主站的项目。</p>
             </div>
             <div className="divide-y divide-stone-200/80">
               {agentDemos.map((demo) => {
