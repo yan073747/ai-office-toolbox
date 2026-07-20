@@ -20,7 +20,7 @@ export const metadata = {
   description: "查看可在线体验的 AI Agent 项目作品集，包含企业 RAG 工单助手、PromptOps、多 Agent 文档工作流、跨境 Listing Agent 和 Enterprise MCP Agent。"
 };
 
-const selectedDemo = agentDemos.find((demo) => demo.slug === "document-workflow") ?? agentDemos[0];
+const selectedDemo = agentDemos.find((demo) => demo.slug === "mcp-agent") ?? agentDemos[0];
 
 const endpointRows = agentDemos.map((demo) => ({
   index: demo.index,
@@ -78,14 +78,14 @@ export default function AgentDemosPage() {
           </div>
 
           <div className="rounded-xl border border-stone-200 bg-white shadow-[0_18px_60px_rgba(41,37,36,0.06)]">
-            <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+            <div className="flex flex-col items-start gap-3 border-b border-stone-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-stone-950">实时可用的演示地址</h2>
                 <p className="mt-1 text-xs text-stone-500">子域名可逐个接入真实服务，不需要购买新域名。</p>
               </div>
               <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                规划中
+                全部可访问
               </span>
             </div>
             <div className="divide-y divide-stone-100">
@@ -93,11 +93,11 @@ export default function AgentDemosPage() {
                 <Link
                   key={row.index}
                   href={row.deployed ? row.href : `/demos/${row.slug}`}
-                  className="grid grid-cols-[44px_1fr_auto] items-center gap-3 px-5 py-3 text-sm transition hover:bg-amber-50/70"
+                  className="grid grid-cols-[34px_minmax(0,1fr)] items-start gap-2 px-5 py-3 text-sm transition hover:bg-amber-50/70 sm:grid-cols-[44px_minmax(0,1fr)_auto] sm:items-center sm:gap-3"
                 >
                   <span className="font-mono text-xs text-stone-400">{row.index}</span>
-                  <span className="font-medium text-stone-800">{row.name}</span>
-                  <span className={row.deployed ? "inline-flex items-center gap-2 text-blue-700" : "inline-flex items-center gap-2 text-amber-700"}>
+                  <span className="min-w-0 font-medium leading-5 text-stone-800">{row.name}</span>
+                  <span className={row.deployed ? "col-span-2 inline-flex min-w-0 items-center gap-2 break-all text-blue-700 sm:col-span-1 sm:justify-self-end" : "col-span-2 inline-flex min-w-0 items-center gap-2 text-amber-700 sm:col-span-1 sm:justify-self-end"}>
                     {row.deployed ? row.href.replace("https://", "") : "部署中 / 查看详情"}
                     {row.deployed ? <ExternalLink className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
                   </span>
