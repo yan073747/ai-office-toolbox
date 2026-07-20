@@ -12,7 +12,7 @@ export type AgentDemo = {
   liveUrl: string;
   deploymentStatus: "deployed" | "pending";
   sourcePath: string;
-  readiness: "可面试演示" | "准备接入" | "本地验证";
+  readiness: "可在线演示" | "准备接入" | "本地验证";
   accent: "amber" | "blue" | "green" | "teal" | "violet";
   stack: string[];
   businessScene: string;
@@ -40,7 +40,7 @@ export const agentDemos: AgentDemo[] = [
     liveUrl: "https://rag-ticket.aiworkbox.cn",
     deploymentStatus: "deployed",
     sourcePath: "enterprise-rag-ticket-agent",
-    readiness: "可面试演示",
+    readiness: "可在线演示",
     accent: "blue",
     stack: ["Python", "FastAPI", "Chroma", "SQLite", "DeepSeek", "Docker"],
     businessScene: "企业客服工单问答与知识库检索",
@@ -54,7 +54,7 @@ export const agentDemos: AgentDemo[] = [
       { label: "兜底机制", value: "低置信度转人工" },
       { label: "部署方式", value: "Docker Compose" }
     ],
-    demoAccount: { username: "demo_interviewer", password: "Demo@2026!" }
+    demoAccount: { username: "demo_user", password: "Demo@2026!" }
   },
   {
     slug: "promptops",
@@ -68,7 +68,7 @@ export const agentDemos: AgentDemo[] = [
     liveUrl: "https://promptops.aiworkbox.cn",
     deploymentStatus: "deployed",
     sourcePath: "promptops-evaluation-platform",
-    readiness: "可面试演示",
+    readiness: "可在线演示",
     accent: "green",
     stack: ["Python", "FastAPI", "SQLite", "Unittest", "Mock LLM", "JavaScript"],
     businessScene: "Prompt 版本管理、批量评测与失败案例分析",
@@ -82,7 +82,7 @@ export const agentDemos: AgentDemo[] = [
       { label: "核心指标", value: "得分 / 失败率 / 成本" },
       { label: "测试覆盖", value: "16 tests OK" }
     ],
-    demoAccount: { username: "demo_interviewer", password: "Demo@2026!" }
+    demoAccount: { username: "demo_user", password: "Demo@2026!" }
   },
   {
     slug: "document-workflow",
@@ -96,7 +96,7 @@ export const agentDemos: AgentDemo[] = [
     liveUrl: "https://docflow.aiworkbox.cn",
     deploymentStatus: "deployed",
     sourcePath: "document-workflow-agent",
-    readiness: "可面试演示",
+    readiness: "可在线演示",
     accent: "amber",
     stack: ["Python", "FastAPI", "LangGraph", "Next.js", "SQLite", "Celery", "Redis"],
     businessScene: "Excel 数据分析、经营报告生成与 Agent Trace 复盘",
@@ -124,7 +124,7 @@ export const agentDemos: AgentDemo[] = [
     liveUrl: "https://listing.aiworkbox.cn",
     deploymentStatus: "deployed",
     sourcePath: "crossborder-listing-agent",
-    readiness: "可面试演示",
+    readiness: "可在线演示",
     accent: "amber",
     stack: ["Python", "FastAPI", "SQLite", "DeepSeek", "CSV", "Excel Export"],
     businessScene: "商品 Listing 生成、竞品分析、多语言本地化",
@@ -138,7 +138,7 @@ export const agentDemos: AgentDemo[] = [
       { label: "评分维度", value: "5 项" },
       { label: "导出", value: "CSV / Excel" }
     ],
-    demoAccount: { username: "demo_interviewer", password: "Demo@2026!" }
+    demoAccount: { username: "demo_user", password: "Demo@2026!" }
   },
   {
     slug: "mcp-agent",
@@ -152,7 +152,7 @@ export const agentDemos: AgentDemo[] = [
     liveUrl: "https://mcp.aiworkbox.cn",
     deploymentStatus: "deployed",
     sourcePath: "enterprise-mcp-agent",
-    readiness: "可面试演示",
+    readiness: "可在线演示",
     accent: "teal",
     stack: ["TypeScript", "Node.js", "MCP SDK", "Express", "React", "SQLite", "Zod"],
     businessScene: "企业内部系统连接、工具调用与销售跟进",
