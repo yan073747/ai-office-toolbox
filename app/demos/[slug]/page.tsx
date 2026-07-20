@@ -199,7 +199,7 @@ export default async function DemoDetailPage({ params }: DemoDetailPageProps) {
           </article>
 
           <article className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm lg:p-8">
-            <h2 className="text-xl font-semibold text-stone-950">面试讲解重点</h2>
+            <h2 className="text-xl font-semibold text-stone-950">能力展示重点</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {demo.talkingPoints.map((point) => (
                 <div key={point} className="rounded-lg border border-stone-200 bg-[#fffdf8] p-4 text-sm leading-6 text-stone-700">
@@ -215,7 +215,7 @@ export default async function DemoDetailPage({ params }: DemoDetailPageProps) {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-stone-950">继续查看其它项目</p>
-            <p className="mt-1 text-sm text-stone-500">所有页面都使用同一套作品集信息架构，便于面试官横向比较。</p>
+            <p className="mt-1 text-sm text-stone-500">所有页面都使用同一套作品集信息架构，便于横向比较项目能力。</p>
           </div>
           <Link href="/demos" className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white transition hover:bg-stone-800">
             返回作品集总览
