@@ -5,11 +5,16 @@ import {
   BarChart3,
   CalendarClock,
   CheckCircle2,
+  ClipboardCheck,
   ExternalLink,
   FileDown,
   FlaskConical,
   Link2,
+  LockKeyhole,
   Network,
+  Route,
+  ServerCog,
+  ShieldCheck,
   UploadCloud,
   Zap
 } from "lucide-react";
@@ -31,6 +36,43 @@ const endpointRows = agentDemos.map((demo) => ({
 }));
 
 const workflowIcons = [UploadCloud, CheckCircle2, Network, FileDown];
+
+const recommendedJourney = [
+  { slug: "mcp-agent", label: "先看 MCP 工具调用", focus: "最贴近企业内部系统集成，能展示权限、参数校验和调用日志。" },
+  { slug: "rag-ticket", label: "再看 RAG 工单助手", focus: "说明知识库检索、来源引用和低置信度兜底。" },
+  { slug: "promptops", label: "补充 PromptOps", focus: "展示 Prompt 版本、批量评测和失败案例复盘能力。" },
+  { slug: "document-workflow", label: "展开多 Agent 流程", focus: "体现计划确认、Trace 观察、报告生成和下载链路。" },
+  { slug: "crossborder-listing", label: "最后看业务落地", focus: "用跨境 Listing 场景展示 A/B 评分、导出和无 Key 兜底。" }
+];
+
+const trustNotes = [
+  {
+    icon: ShieldCheck,
+    title: "公开演示数据",
+    body: "站点只使用样例客户、样例商品和样例文档，避免暴露真实客户数据。"
+  },
+  {
+    icon: LockKeyhole,
+    title: "无需真实密钥",
+    body: "演示优先采用 Mock LLM 或降级数据，适合直接发给面试官在线查看。"
+  },
+  {
+    icon: ClipboardCheck,
+    title: "可复盘链路",
+    body: "每个项目都围绕输入、执行、日志、结果或导出物组织，不只是一屏静态截图。"
+  }
+];
+
+const capabilityRows = [
+  { capability: "RAG 与来源引用", evidence: "Enterprise RAG Ticket Agent 展示知识库检索、置信度和转人工工单。" },
+  { capability: "Prompt 工程化", evidence: "PromptOps 覆盖版本管理、测试集、批量评分和失败样本沉淀。" },
+  { capability: "多 Agent 编排", evidence: "Document Workflow 用 Planner / Analyst / Writer / Reviewer 串联办公流程。" },
+  { capability: "MCP 工具调用", evidence: "Enterprise MCP Agent 展示工具权限、参数校验、规则编排和调用日志。" },
+  { capability: "业务场景抽象", evidence: "跨境 Listing、客服工单、CRM 销售和文档报告覆盖不同企业流程。" },
+  { capability: "可观测与审计", evidence: "页面重点展示 Trace、状态、入参出参、耗时、置信度和历史记录。" },
+  { capability: "低成本部署", evidence: "主站统一入口，子域名独立部署，演示环境可逐个替换真实服务。" },
+  { capability: "交付物导出", evidence: "报告、CSV、Excel、工单和评测结果都能作为业务侧交付物说明。" }
+];
 
 export default function AgentDemosPage() {
   return (
@@ -104,6 +146,90 @@ export default function AgentDemosPage() {
                 </Link>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6">
+            <div className="flex items-center gap-2">
+              <Route className="h-5 w-5 text-amber-600" />
+              <h2 className="text-base font-semibold text-stone-950">推荐观看顺序</h2>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
+              如果面试官只有十分钟，建议先从 MCP Agent 进入，再按工程能力逐步展开，而不是逐个随机打开。
+            </p>
+            <div className="mt-5 grid gap-3">
+              {recommendedJourney.map((item, index) => {
+                const demo = agentDemos.find((entry) => entry.slug === item.slug);
+                if (!demo) return null;
+
+                return (
+                  <Link
+                    key={item.slug}
+                    href={demo.liveUrl}
+                    target="_blank"
+                    className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-lg border border-stone-200 bg-[#fffdf8] p-4 transition hover:border-amber-300 hover:bg-amber-50 sm:grid-cols-[46px_minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-950 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-stone-950">{item.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-stone-500">{item.focus}</span>
+                    </span>
+                    <span className="col-span-2 inline-flex min-w-0 items-center gap-2 break-all text-xs font-semibold text-blue-700 sm:col-span-1 sm:justify-self-end">
+                      {demo.liveUrl.replace("https://", "")}
+                      <ExternalLink className="h-4 w-4 shrink-0" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {trustNotes.map((note) => {
+              const Icon = note.icon;
+              return (
+                <div key={note.title} className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.04)]">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
+                    <Icon className="h-4 w-4 text-emerald-700" />
+                    {note.title}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-stone-600">{note.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl border-y border-stone-200 py-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <ServerCog className="h-5 w-5 text-blue-700" />
+                <h2 className="text-base font-semibold text-stone-950">AI 工程能力矩阵</h2>
+              </div>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+                作品集不只证明“会调模型”，更强调工程闭环、可观测、可部署和可交付。
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              5 个在线项目覆盖
+            </span>
+          </div>
+          <div className="mt-5 grid overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-4">
+            {capabilityRows.map((row) => (
+              <div key={row.capability} className="min-w-0 bg-white p-4">
+                <p className="text-sm font-semibold text-stone-950">{row.capability}</p>
+                <p className="mt-2 text-xs leading-5 text-stone-500">{row.evidence}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -218,8 +344,8 @@ export default function AgentDemosPage() {
                 <BarChart3 className="h-5 w-5 text-amber-600" />
                 <h3 className="text-base font-semibold text-stone-950">项目横向对比</h3>
               </div>
-              <div className="mt-5 overflow-hidden rounded-xl border border-stone-200">
-                <table className="w-full border-collapse text-left text-sm">
+              <div className="mt-5 overflow-x-auto rounded-xl border border-stone-200">
+                <table className="min-w-[920px] w-full border-collapse text-left text-sm">
                   <thead className="bg-[#fffaf0] text-xs text-stone-500">
                     <tr>
                       <th className="px-4 py-3 font-semibold">项目名称</th>
@@ -277,7 +403,7 @@ export default function AgentDemosPage() {
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-stone-200">
             <CalendarClock className="h-4 w-4 text-amber-200" />
-            更新时间：2026-07-13
+            更新时间：2026-07-20
           </div>
         </div>
       </section>
