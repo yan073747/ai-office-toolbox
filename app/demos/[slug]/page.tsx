@@ -10,6 +10,14 @@ type DemoDetailPageProps = {
   }>;
 };
 
+const publicDemoNotes: Record<string, string> = {
+  "rag-ticket": "当前线上版本使用样例知识库演示文档入库、检索和转工单；工程版可接入真实文档库、Embedding 服务和模型服务。",
+  promptops: "当前线上版本使用 Mock Model 演示 Prompt 版本、测试集和失败案例；工程版可接入 OpenAI、Claude、Gemini、DeepSeek 等模型 Provider。",
+  "document-workflow": "当前线上版本使用 deterministic fixture 和安全样例数据；工程版可接入真实文件存储、任务队列、模型 Provider 和权限系统。",
+  "crossborder-listing": "当前线上版本使用本地规则和样例商品数据演示；工程版可接入真实 LLM、店铺数据、运营导出和历史数据库。",
+  "mcp-agent": "当前线上版本使用前端模拟链路和固定样例数据；工程版可接入真实 MCP Server、CRM、权限校验和审计日志。"
+};
+
 export function generateStaticParams() {
   return agentDemos.map((demo) => ({ slug: demo.slug }));
 }
@@ -133,9 +141,10 @@ export default async function DemoDetailPage({ params }: DemoDetailPageProps) {
               <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
                 <div className="flex items-center gap-2 font-semibold">
                   <ShieldCheck className="h-4 w-4" />
-                  安全样例数据
+                  公开演示说明
                 </div>
-                <p className="mt-2">公开演示只使用脱敏样例和本地模拟数据，不暴露真实客户信息或密钥。</p>
+                <p className="mt-2">当前线上版本使用样例数据、Mock 或本地规则，保证公开访问稳定；工程版已预留真实模型、数据库、权限或后端服务接入空间。</p>
+                <p className="mt-2">{publicDemoNotes[demo.slug]}</p>
               </div>
             </aside>
           </div>

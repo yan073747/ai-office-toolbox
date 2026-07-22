@@ -64,14 +64,24 @@ const trustNotes = [
 ];
 
 const capabilityRows = [
-  { capability: "RAG 与来源引用", evidence: "Enterprise RAG Ticket Agent 展示知识库检索、置信度和转人工工单。" },
-  { capability: "Prompt 工程化", evidence: "PromptOps 覆盖版本管理、测试集、批量评分和失败样本沉淀。" },
-  { capability: "多 Agent 编排", evidence: "Document Workflow 用 Planner / Analyst / Writer / Reviewer 串联办公流程。" },
-  { capability: "MCP 工具调用", evidence: "Enterprise MCP Agent 展示工具权限、参数校验、规则编排和调用日志。" },
-  { capability: "业务场景抽象", evidence: "跨境 Listing、客服工单、CRM 销售和文档报告覆盖不同企业流程。" },
-  { capability: "可观测与审计", evidence: "页面重点展示 Trace、状态、入参出参、耗时、置信度和历史记录。" },
-  { capability: "低成本部署", evidence: "主站统一入口，子域名独立部署，演示环境可逐个替换真实服务。" },
-  { capability: "交付物导出", evidence: "报告、CSV、Excel、工单和评测结果都能作为业务侧交付物说明。" }
+  { capability: "知识库与 RAG", evidence: "文档入库、来源引用、置信度判断和低置信度转人工。", slug: "rag-ticket" },
+  { capability: "Prompt 评测", evidence: "Prompt 版本、测试集、批量评分、失败案例和迭代对比。", slug: "promptops" },
+  { capability: "工具调用", evidence: "MCP 工具权限、参数校验、规则编排、入参出参和调用日志。", slug: "mcp-agent" },
+  { capability: "多 Agent 工作流", evidence: "Planner / Analyst / Writer / Reviewer 串联计划、分析、写作和审核。", slug: "document-workflow" },
+  { capability: "业务流程自动化", evidence: "跨境 Listing、客服工单、CRM 销售和文档报告覆盖不同企业流程。", slug: "crossborder-listing" },
+  { capability: "Trace 与复盘", evidence: "页面重点展示状态、耗时、置信度、历史记录和任务执行轨迹。", slug: "document-workflow" },
+  { capability: "数据导出与交付", evidence: "报告、CSV、Excel、工单和评测结果都能作为业务侧交付物说明。", slug: "crossborder-listing" },
+  { capability: "安全演示与回退", evidence: "公开环境使用样例数据、Mock 或本地规则，保留真实服务接入空间。", slug: "mcp-agent" }
+];
+
+const iterationSteps = ["测试集 / 样例输入", "批量运行", "评分或置信度", "Badcase / 低置信度识别", "优化方向", "版本或历史复盘"];
+
+const iterationRows = [
+  { project: "PromptOps", slug: "promptops", focus: "Prompt 版本、测试集、自动评分、人审复核和失败案例沉淀。" },
+  { project: "RAG Ticket", slug: "rag-ticket", focus: "检索结果带来源和置信度，低置信度问题进入人工工单链路。" },
+  { project: "Listing Agent", slug: "crossborder-listing", focus: "A/B Listing 评分、推荐理由、二次优化和历史导出。" },
+  { project: "MCP Agent", slug: "mcp-agent", focus: "工具选择、权限拦截、入参出参、耗时和 Trace 复盘。" },
+  { project: "Document Workflow", slug: "document-workflow", focus: "任务计划、人工确认、执行 Trace、报告产出和历史记录。" }
 ];
 
 export default function AgentDemosPage() {
@@ -212,10 +222,10 @@ export default function AgentDemosPage() {
             <div>
               <div className="flex items-center gap-2">
                 <ServerCog className="h-5 w-5 text-blue-700" />
-                <h2 className="text-base font-semibold text-stone-950">AI 工程能力矩阵</h2>
+                <h2 className="text-base font-semibold text-stone-950">AI 应用工程能力图谱</h2>
               </div>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-                作品集不只证明“会调模型”，更强调工程闭环、可观测、可部署和可交付。
+                作品集不只证明“会调模型”，更强调知识库、工具调用、工作流、评测复盘和可交付结果。
               </p>
             </div>
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -225,10 +235,43 @@ export default function AgentDemosPage() {
           </div>
           <div className="mt-5 grid overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-4">
             {capabilityRows.map((row) => (
-              <div key={row.capability} className="min-w-0 bg-white p-4">
+              <Link key={row.capability} href={`/demos/${row.slug}`} className="min-w-0 bg-white p-4 transition hover:bg-amber-50">
                 <p className="text-sm font-semibold text-stone-950">{row.capability}</p>
                 <p className="mt-2 text-xs leading-5 text-stone-500">{row.evidence}</p>
-              </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <div>
+            <div className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-amber-600" />
+              <h2 className="text-base font-semibold text-stone-950">Agent 评测与迭代闭环</h2>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-stone-600">
+              这些项目都围绕“能运行、能评测、能复盘、能继续优化”组织，而不是只展示一次生成结果。
+            </p>
+            <div className="mt-5 grid gap-2">
+              {iterationSteps.map((step, index) => (
+                <div key={step} className="grid grid-cols-[34px_minmax(0,1fr)] items-center gap-3 rounded-lg border border-stone-200 bg-[#fffdf8] px-3 py-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-stone-950 text-xs font-semibold text-white">{index + 1}</span>
+                  <span className="text-sm font-semibold text-stone-800">{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-3">
+            {iterationRows.map((row) => (
+              <Link key={row.project} href={`/demos/${row.slug}`} className="rounded-lg border border-stone-200 bg-[#fffdf8] p-4 transition hover:border-amber-300 hover:bg-amber-50">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-stone-950">{row.project}</p>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-stone-400" />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-stone-500">{row.focus}</p>
+              </Link>
             ))}
           </div>
         </div>
