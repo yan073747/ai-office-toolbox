@@ -10,10 +10,7 @@ import type { LocalUser } from "@/lib/user-store";
 const navItems = [
   { label: "首页", href: "/" },
   { label: "工具箱", href: "/tools" },
-  { label: "Agent作品集", href: "/demos" },
-  { label: "行业方案", href: "/solutions" },
-  { label: "定价", href: "/pricing" },
-  { label: "联系定制", href: "/contact" }
+  { label: "Agent作品集", href: "/demos" }
 ];
 
 export default function SiteHeader() {
