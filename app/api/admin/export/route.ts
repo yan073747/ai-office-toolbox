@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
 import { getCurrentServerUser } from "@/lib/server-auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+const userExportArgs = Prisma.validator<Prisma.UserFindManyArgs>()({
+  orderBy: { createdAt: "desc" },
+  take: 500,
+  select: {
+    id: true,
+    email: true,
+    role: true,
+    createdAt: true,
+    subscriptions: {
+      orderBy: { createdAt: "desc" },
+      take: 1,
+      select: { plan: true, status: true, credits: true, expiresAt: true }
+    }
+  }
+});
+
+type ContactExportRow = Awaited<ReturnType<typeof prisma.contactSubmission.findMany>>[number];
+type UsageExportRow = Awaited<ReturnType<typeof prisma.usageRecord.findMany>>[number];
+type OrderExportRow = Awaited<ReturnType<typeof prisma.order.findMany>>[number];
+type UserExportRow = Prisma.UserGetPayload<typeof userExportArgs>;
 
 async function requireAdmin() {
   const user = await getCurrentServerUser();
@@ -31,21 +53,21 @@ export async function GET(request: Request) {
     filename = "contact-submissions.csv";
     csv = toCsv(
       ["时间", "姓名", "公司", "手机", "微信", "邮箱", "行业", "预算", "需求描述"],
-      rows.map((row) => [row.createdAt.toISOString(), row.name, row.company, row.phone, row.wechat, row.email, row.industry, row.budget, row.description])
+      rows.map((row: ContactExportRow) => [row.createdAt.toISOString(), row.name, row.company, row.phone, row.wechat, row.email, row.industry, row.budget, row.description])
     );
   } else if (type === "usage") {
     const rows = await prisma.usageRecord.findMany({ orderBy: { createdAt: "desc" }, take: 1000 });
     filename = "usage-records-admin.csv";
     csv = toCsv(
       ["时间", "用户ID", "工具ID", "工具名称", "状态", "消耗额度", "错误信息"],
-      rows.map((row) => [row.createdAt.toISOString(), row.userId, row.toolId, row.toolName, row.status, row.quotaUsed, row.errorMessage])
+      rows.map((row: UsageExportRow) => [row.createdAt.toISOString(), row.userId, row.toolId, row.toolName, row.status, row.quotaUsed, row.errorMessage])
     );
   } else if (type === "orders") {
     const rows = await prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
     filename = "orders-admin.csv";
     csv = toCsv(
       ["时间", "订单号", "用户ID", "用户邮箱", "套餐", "金额", "次数", "订单状态", "付款方式", "用户付款时间", "确认收款时间"],
-      rows.map((row) => [
+      rows.map((row: OrderExportRow) => [
         row.createdAt.toISOString(),
         row.id,
         row.userId,
@@ -60,25 +82,11 @@ export async function GET(request: Request) {
       ])
     );
   } else {
-    const rows = await prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 500,
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        subscriptions: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { plan: true, status: true, credits: true, expiresAt: true }
-        }
-      }
-    });
+    const rows = await prisma.user.findMany(userExportArgs);
     filename = "users-admin.csv";
     csv = toCsv(
       ["注册时间", "用户ID", "邮箱", "角色", "套餐", "套餐状态", "剩余次数", "到期时间"],
-      rows.map((row) => {
+      rows.map((row: UserExportRow) => {
         const subscription = row.subscriptions[0];
         return [
           row.createdAt.toISOString(),
