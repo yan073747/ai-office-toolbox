@@ -3,7 +3,7 @@
 import {
   ArrowRight,
   BarChart3,
-  BriefcaseBusiness,
+  Boxes,
   ClipboardList,
   FileCheck2,
   FileText,
@@ -141,11 +141,12 @@ export default function ToolsOverviewClient() {
                   <button
                     key={category}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => setActiveCategory(category)}
                     className={
                       active
-                        ? "h-10 shrink-0 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm"
-                        : "h-10 shrink-0 rounded-xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+                        ? "h-11 shrink-0 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm"
+                        : "h-11 shrink-0 rounded-xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
                     }
                   >
                     {category}
@@ -158,6 +159,7 @@ export default function ToolsOverviewClient() {
             <label className="relative block">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
+                aria-label="搜索工具名称"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
                 placeholder="搜索工具名称"
@@ -198,26 +200,26 @@ export default function ToolsOverviewClient() {
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
-                <BriefcaseBusiness className="h-5 w-5" />
+                <Boxes className="h-5 w-5" />
               </div>
-              <h2 className="text-2xl font-semibold tracking-normal sm:text-3xl">不确定该用哪个工具？</h2>
+              <h2 className="text-2xl font-semibold tracking-normal sm:text-3xl">继续查看完整的 Agent 工程</h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                你可以联系我们，我们会根据你的业务场景推荐合适的 AI 办公方案。
+                从单点工具继续深入 RAG、Prompt 评测、多 Agent 编排与 MCP 工具调用的完整项目实践。
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/contact"
+                href="/demos"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-50"
               >
-                联系定制
+                查看 Agent 作品
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/#solutions"
+                href="/about"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
               >
-                查看行业方案
+                了解工程能力
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

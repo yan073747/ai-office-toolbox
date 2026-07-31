@@ -86,26 +86,26 @@ const iterationRows = [
 
 export default function AgentDemosPage() {
   return (
-    <main className="min-h-screen bg-[#fbfaf7] text-stone-950">
+    <main className="min-h-screen bg-white text-slate-950">
       <SiteHeader />
 
-      <section className="border-b border-stone-200 bg-[#fffdf8] px-5 py-12 sm:px-6 lg:px-8">
+      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-10 sm:px-6 sm:py-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold tracking-normal text-amber-700">可部署的 AI Agent 在线演示项目集</p>
-            <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-6xl">
+            <p className="text-sm font-semibold tracking-normal text-blue-700">可部署的 AI Agent 在线演示项目集</p>
+            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:mt-5 sm:text-6xl">
               AI Agent 作品集
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
               五个项目统一收纳在 aiworkbox.cn 下，访问者可以从一个入口查看业务场景、工程架构、技术栈和真实演示地址。
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               {selectedDemo.deploymentStatus === "deployed" ? (
                 <a
                   href={selectedDemo.liveUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-stone-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
                 >
                   打开推荐演示
                   <ExternalLink className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default function AgentDemosPage() {
               ) : (
                 <Link
                   href={`/demos/${selectedDemo.slug}`}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-stone-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
                 >
                   部署中 / 查看详情
                   <ArrowRight className="h-4 w-4" />
@@ -121,7 +121,7 @@ export default function AgentDemosPage() {
               )}
               <Link
                 href={`/demos/${selectedDemo.slug}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-800 transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-50"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50"
               >
                 查看案例详情
                 <ArrowRight className="h-4 w-4" />
@@ -129,7 +129,7 @@ export default function AgentDemosPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-stone-200 bg-white shadow-[0_18px_60px_rgba(41,37,36,0.06)]">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)]">
             <div className="flex flex-col items-start gap-3 border-b border-stone-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-stone-950">实时可用的演示地址</h2>
@@ -160,7 +160,7 @@ export default function AgentDemosPage() {
         </div>
       </section>
 
-      <section className="px-5 py-8 sm:px-6 lg:px-8">
+      <section className="px-5 py-7 sm:px-6 sm:py-8 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6">
             <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function AgentDemosPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-8 sm:px-6 lg:px-8">
+      <section className="px-5 pb-7 sm:px-6 sm:pb-8 lg:px-8">
         <div className="mx-auto max-w-7xl border-y border-stone-200 py-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -244,7 +244,7 @@ export default function AgentDemosPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-8 sm:px-6 lg:px-8">
+      <section className="px-5 pb-7 sm:px-6 sm:pb-8 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export default function AgentDemosPage() {
         </div>
       </section>
 
-      <section className="px-5 py-8 sm:px-6 lg:px-8">
+      <section className="px-5 py-7 sm:px-6 sm:py-8 lg:px-8">
         <div className="mx-auto grid max-w-7xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-[0_20px_70px_rgba(41,37,36,0.07)] lg:grid-cols-[310px_1fr]">
           <aside className="border-b border-stone-200 bg-[#fffaf0] lg:border-b-0 lg:border-r">
             <div className="border-b border-stone-200 px-6 py-5">
@@ -433,7 +433,7 @@ export default function AgentDemosPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-14 sm:px-6 lg:px-8">
+      <section className="px-5 pb-12 sm:px-6 sm:pb-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-4 rounded-xl border border-stone-200 bg-stone-950 p-6 text-white md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <div className="flex items-center gap-2 text-sm font-semibold text-amber-200">

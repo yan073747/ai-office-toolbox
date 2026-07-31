@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "test:showcase": "node --test --test-concurrency=1 tests/showcase-site.test.mjs",
     "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start"

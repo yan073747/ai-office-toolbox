@@ -9,8 +9,9 @@ import type { LocalUser } from "@/lib/user-store";
 
 const navItems = [
   { label: "首页", href: "/" },
-  { label: "工具箱", href: "/tools" },
-  { label: "Agent作品集", href: "/demos" }
+  { label: "工具演示", href: "/tools" },
+  { label: "Agent作品集", href: "/demos" },
+  { label: "关于", href: "/about" }
 ];
 
 export default function SiteHeader() {
@@ -78,14 +79,14 @@ export default function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100">
+              <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100">
                 登录
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800"
               >
-                免费体验
+                在线体验
               </Link>
             </>
           )}
@@ -94,15 +95,17 @@ export default function SiteHeader() {
         <button
           type="button"
           aria-label={open ? "关闭菜单" : "打开菜单"}
+          aria-expanded={open}
+          aria-controls="site-mobile-menu"
           onClick={() => setOpen((value) => !value)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-700 md:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-700 md:hidden"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
 
       {open ? (
-        <div className="border-t border-stone-200 bg-white px-5 py-4 shadow-lg md:hidden">
+        <div id="site-mobile-menu" className="border-t border-stone-200 bg-white px-5 py-4 shadow-lg md:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-2">
             {navItems.map((item) => (
               <Link
@@ -141,7 +144,7 @@ export default function SiteHeader() {
                   onClick={() => setOpen(false)}
                   className="inline-flex h-11 items-center justify-center rounded-lg bg-stone-950 text-sm font-semibold text-white"
                 >
-                  免费体验
+                  在线体验
                 </Link>
               </div>
             )}
