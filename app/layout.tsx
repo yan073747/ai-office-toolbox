@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AI办公工具箱 | Office AI Toolbox",
-  description: "面向个人、小团队、个体户和中小企业的 AI 办公效率工具箱，支持 Excel 分析、PDF 总结、合同提取、汇报生成、PPT 大纲、会议纪要和邮件润色。"
+  description: "可运行的 AI 应用工程作品集，覆盖办公工具、RAG、Prompt 评测、多 Agent 工作流与 MCP 工具调用。"
 };
 
 export default function RootLayout({
@@ -13,7 +13,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#main-content">
+          跳到主要内容
+        </a>
+        <div id="main-content">{children}</div>
+      </body>
     </html>
   );
 }

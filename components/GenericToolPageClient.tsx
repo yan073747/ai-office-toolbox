@@ -552,7 +552,8 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">
                   <Clipboard className="h-5 w-5" />
                 </div>
-                <p className="mt-4 text-sm font-medium text-slate-500">{tool.emptyText || "生成结果会显示在这里"}</p>
+                <p className="mt-4 text-sm font-medium text-slate-600">完成左侧输入后，AI 生成结果将在这里展示。</p>
+                <p className="mt-2 text-xs text-slate-400">{tool.emptyText}</p>
               </div>
             ) : null}
 
@@ -745,7 +746,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:opacity-80"
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -935,5 +936,4 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
 
