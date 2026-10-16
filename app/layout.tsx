@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI办公工具箱 | Office AI Toolbox",
-  description: "可运行的 AI 应用工程作品集，覆盖办公工具、RAG、Prompt 评测、多 Agent 工作流与 MCP 工具调用。"
+  title: "AI WorkBox | 企业 AI 应用落地服务",
+  description:
+    "AI WorkBox：面向中小企业与电商团队的 AI 落地服务，覆盖企业知识库问答、客服自动回复、文档与报表自动化，以及可在线试用的 AI 办公工具。"
 };
 
 export default function RootLayout({

@@ -58,12 +58,12 @@ function includes(html, value) {
   return html.includes(value);
 }
 
-test("public showcase hides commercial entry points while preserving routes", async () => {
+test("home is service-first while legacy commercial routes stay reachable but unlinked", async () => {
   const home = await getPage("/");
   assert.equal(home.status, 200);
   assert.equal(includes(home.html, 'href="/solutions"'), false, "home must not link to /solutions");
   assert.equal(includes(home.html, 'href="/pricing"'), false, "home must not link to /pricing");
-  assert.equal(includes(home.html, 'href="/contact"'), false, "home must not link to /contact");
+  assert.equal(includes(home.html, 'href="/contact"'), true, "home must surface the enquiry entry");
 
   for (const route of ["/solutions", "/pricing", "/contact"]) {
     const page = await getPage(route);
@@ -71,8 +71,8 @@ test("public showcase hides commercial entry points while preserving routes", as
   }
 });
 
-test("global shell exposes portfolio navigation and accessibility hooks", async () => {
-  const page = await getPage("/");
+test("shared shell exposes navigation and accessibility hooks", async () => {
+  const page = await getPage("/tools");
   for (const label of ["首页", "工具演示", "Agent作品集", "关于"]) {
     assert.equal(includes(page.html, label), true, `global shell must contain ${label}`);
   }
@@ -82,13 +82,15 @@ test("global shell exposes portfolio navigation and accessibility hooks", async 
   assert.equal(includes(page.html, 'aria-controls="site-mobile-menu"'), true, "menu must identify controlled region");
 });
 
-test("home presents runnable tools and agent engineering evidence", async () => {
+test("home sells AI delivery services with pricing, proof and a low-risk first step", async () => {
   const page = await getPage("/");
-  assert.equal(includes(page.html, "可运行的 AI 应用工程作品集"), true, "home must state portfolio positioning");
-  assert.equal(includes(page.html, "7 个办公工具"), true, "home must show tool proof");
-  assert.equal(includes(page.html, "5 个 Agent 项目"), true, "home must show agent proof");
-  assert.equal(includes(page.html, 'href="/demos"'), true, "home must link to Agent work");
-  assert.equal(includes(page.html, 'href="/tools/excel"'), true, "home tool cards must deep-link");
+  assert.equal(includes(page.html, "企业知识库问答"), true, "home must name the flagship service");
+  assert.equal(includes(page.html, "客服 / 售后自动回复"), true, "home must name the support automation service");
+  assert.equal(includes(page.html, "¥6,000 起"), true, "home must publish a starting price");
+  assert.equal(includes(page.html, "先做小样"), true, "home must offer a low-risk first step");
+  assert.equal(includes(page.html, "rag-ticket.aiworkbox.cn"), true, "home must link a runnable demo");
+  assert.equal(includes(page.html, 'href="/demos"'), true, "home must link Agent work");
+  assert.equal(includes(page.html, 'href="/tools"'), true, "home must link the free tools");
   assert.doesNotMatch(page.html, /行业定制|查看定价|联系定制|商务合作/);
 });
 

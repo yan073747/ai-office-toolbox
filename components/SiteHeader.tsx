@@ -52,7 +52,7 @@ export default function SiteHeader() {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-950 text-white shadow-sm">
             <Sparkles className="h-4 w-4" />
           </span>
-          <span className="text-base font-semibold tracking-normal text-stone-950">AI办公工具箱</span>
+          <span className="text-base font-semibold tracking-normal text-stone-950">AI WorkBox</span>
         </Link>
 
         <div className="hidden items-center gap-7 md:flex">
