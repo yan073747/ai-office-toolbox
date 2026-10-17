@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { notifyNewLead } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
 
 type ContactPayload = {
@@ -76,6 +77,14 @@ export async function POST(request: Request) {
 
     await createRecord(config.baseAppToken, tableId, token, recordFields);
     await saveContactSubmission(payload as RequiredContactPayload, tableId);
+    const lead = payload as RequiredContactPayload;
+    await notifyNewLead({
+      name: lead.name.trim(),
+      contact: describeContact(lead),
+      budget: lead.budget.trim(),
+      description: lead.description.trim(),
+      source: "联系页"
+    });
 
     return NextResponse.json({
       success: true,
@@ -108,6 +117,16 @@ function validatePayload(payload: ContactPayload | null) {
   if (!payload.budget?.trim()) return "请选择预算范围。";
   if (!payload.description?.trim()) return "请填写需求描述。";
   return "";
+}
+
+function describeContact(payload: ContactPayload) {
+  return [
+    payload.wechat?.trim() ? `微信 ${payload.wechat.trim()}` : "",
+    payload.phone?.trim() ? `手机 ${payload.phone.trim()}` : "",
+    payload.email?.trim() ? `邮箱 ${payload.email.trim()}` : ""
+  ]
+    .filter(Boolean)
+    .join(" / ");
 }
 
 function getFeishuConfig() {
@@ -202,7 +221,7 @@ function buildRecordFields(payload: RequiredContactPayload, fields: FeishuField[
     提交时间: Date.now(),
     是否已处理: "否",
     优先级: "中",
-    来源页面: "联系定制"
+    来源页面: "联系页"
   };
 
   const record: Record<string, string | number | boolean> = {};
@@ -256,7 +275,7 @@ async function saveContactSubmission(payload: RequiredContactPayload, feishuTabl
       industry: payload.industry.trim(),
       budget: payload.budget.trim(),
       description: payload.description.trim(),
-      sourcePage: "联系定制",
+      sourcePage: "联系页",
       feishuTableId
     }
   });
