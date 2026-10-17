@@ -360,7 +360,7 @@ export default function DashboardClient() {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
+                <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
                 <h1 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">{activeItem.label}</h1>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

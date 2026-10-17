@@ -281,7 +281,7 @@ export default function AdminPageClient() {
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
+            <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-normal">管理员后台</h1>
             <p className="mt-2 text-sm text-slate-500">查看用户、联系表单、订单、套餐和使用数据。</p>
           </div>

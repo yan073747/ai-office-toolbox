@@ -3,15 +3,15 @@ import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "服务条款 | AI办公工具箱",
-  description: "AI办公工具箱服务条款，说明服务范围、用户规则、文件上传、AI 生成内容、账号安全和责任限制。"
+  title: "服务条款 | AI WorkBox",
+  description: "AI WorkBox服务条款，说明服务范围、用户规则、文件上传、AI 生成内容、账号安全和责任限制。"
 };
 
 const sections = [
   {
     title: "服务说明",
     content: [
-      "AI办公工具箱提供面向办公场景的 AI 工具服务，包括但不限于表格分析、文档总结、合同重点提取、报告生成、PPT 大纲、会议纪要和邮件润色。",
+      "AI WorkBox提供面向办公场景的 AI 工具服务，包括但不限于表格分析、文档总结、合同重点提取、报告生成、PPT 大纲、会议纪要和邮件润色。",
       "本网站会根据产品规划持续调整功能范围、页面展示、工具能力和服务形式。"
     ]
   },
@@ -60,7 +60,7 @@ const sections = [
   {
     title: "责任限制",
     content: [
-      "在法律允许范围内，AI办公工具箱不对因使用或无法使用本服务、依赖 AI 生成内容、上传不当文件或第三方服务异常造成的间接损失承担责任。",
+      "在法律允许范围内，AI WorkBox不对因使用或无法使用本服务、依赖 AI 生成内容、上传不当文件或第三方服务异常造成的间接损失承担责任。",
       "你应自行判断生成内容的准确性、适用性和合规性，并承担使用结果所产生的风险。"
     ]
   },
@@ -117,11 +117,11 @@ export default function TermsPage() {
 
       <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-[800px]">
-          <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
+          <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
           <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">服务条款</h1>
           <p className="mt-5 text-sm leading-7 text-slate-500">最后更新日期：2026-06-03</p>
           <p className="mt-6 text-base leading-8 text-slate-600">
-            欢迎使用 AI办公工具箱。使用本网站及相关 AI 办公工具前，请阅读并理解以下服务条款。
+            欢迎使用 AI WorkBox。使用本网站及相关 AI 办公工具前，请阅读并理解以下服务条款。
           </p>
         </div>
       </section>
@@ -169,7 +169,7 @@ function LegalFooter() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="font-semibold text-slate-950">AI办公工具箱</span>
+            <span className="font-semibold text-slate-950">AI WorkBox</span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
             Office AI Toolbox，面向个人、小团队、个体户和中小企业的 AI 办公效率工具网站。
@@ -190,7 +190,7 @@ function LegalFooter() {
         ))}
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 AI办公工具箱. All rights reserved.</p>
+        <p>© 2026 AI WorkBox. All rights reserved.</p>
         <p>Office AI Toolbox</p>
       </div>
     </footer>

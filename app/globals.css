@@ -18,8 +18,8 @@ html {
 
 body {
   margin: 0;
-  background: #ffffff;
-  color: #172033;
+  background: #fbf8f2;
+  color: #1b1a17;
   font-family:
     ui-sans-serif,
     system-ui,
@@ -29,6 +29,39 @@ body {
     "Microsoft YaHei",
     "PingFang SC",
     sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* hidden 属性必须真正生效（display 声明会覆盖它） */
+[hidden] {
+  display: none !important;
+}
+
+/* 移动端：低端安卓上 backdrop-blur 每帧重算，掉帧明显 */
+@media (max-width: 767px) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .site-header {
+    background: #fbf8f2 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* iOS 会把点过的元素留在 hover 态，导致按钮停在上移位置 */
+@media (hover: none), (pointer: coarse) {
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}
+
+/* 表格类容器在窄屏可横向滑动，不撑破页面 */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 a {

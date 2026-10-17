@@ -60,7 +60,7 @@ function hashVerificationCode(email: string, code: string) {
 async function sendVerificationEmail(email: string, code: string) {
   await sendEmail({
     to: email,
-    subject: "AI办公工具箱邮箱验证码",
+    subject: "AI WorkBox邮箱验证码",
     text: `你的邮箱验证码是：${code}。验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。`,
     html: `<p>你的邮箱验证码是：</p><p style="font-size:24px;font-weight:700;letter-spacing:4px;">${code}</p><p>验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。</p>`
   });

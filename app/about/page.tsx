@@ -18,8 +18,8 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 export const metadata = {
-  title: "关于项目 | AI办公工具箱",
-  description: "了解 AI办公工具箱从办公工具到 RAG、评测、多 Agent 与 MCP 项目的产品设计和工程实现。"
+  title: "关于项目 | AI WorkBox",
+  description: "了解 AI WorkBox从办公工具到 RAG、评测、多 Agent 与 MCP 项目的产品设计和工程实现。"
 };
 
 const engineeringAreas = [
@@ -75,7 +75,7 @@ export default function AboutPage() {
               从可用工具到完整的 AI 应用工程
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-              AI办公工具箱是一组面向真实办公任务的产品与工程实践。它不仅展示模型能做什么，也呈现需求拆解、交互设计、后端服务、可靠性控制和部署交付如何组成完整系统。
+              AI WorkBox是一组面向真实办公任务的产品与工程实践。它不仅展示模型能做什么，也呈现需求拆解、交互设计、后端服务、可靠性控制和部署交付如何组成完整系统。
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/demos" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800">

@@ -2,7 +2,7 @@ import SolutionDetailPage from "../SolutionDetailPage";
 import { getSolutionBySlug } from "../solution-data";
 
 export const metadata = {
-  title: "自媒体内容 AI 方案 | AI办公工具箱",
+  title: "自媒体内容 AI 方案 | AI WorkBox",
   description: "面向小红书、抖音、公众号和视频号创作者的 AI 内容生产方案。"
 };
 

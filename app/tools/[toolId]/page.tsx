@@ -23,12 +23,12 @@ export async function generateMetadata({ params }: ToolPageProps) {
 
   if (!toolNames[toolId]) {
     return {
-      title: "工具不存在 | AI办公工具箱"
+      title: "工具不存在 | AI WorkBox"
     };
   }
 
   return {
-    title: `${toolNames[toolId]} | AI办公工具箱`,
+    title: `${toolNames[toolId]} | AI WorkBox`,
     description: `使用 ${toolNames[toolId]}，上传文件或输入内容，获取 AI 生成的结构化结果。`
   };
 }

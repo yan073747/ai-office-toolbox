@@ -118,7 +118,7 @@ export default function PaymentOrderPageClient({ orderId }: { orderId: string })
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
+            <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-normal">订单支付</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">请选择付款方式并扫码付款，付款后提交确认信息等待管理员核对。</p>
           </div>

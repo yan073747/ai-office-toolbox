@@ -145,7 +145,7 @@ export async function POST(request: Request) {
   try {
     await sendEmail({
       to: user.email,
-      subject: "AI办公工具箱密码重置验证码",
+      subject: "AI WorkBox密码重置验证码",
       text: `你的密码重置验证码是：${code}。验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。`,
       html: `<p>你的密码重置验证码是：</p><p style="font-size:24px;font-weight:700;letter-spacing:4px;">${code}</p><p>验证码 15 分钟内有效。如果不是你本人操作，可以忽略这封邮件。</p>`
     });

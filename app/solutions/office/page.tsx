@@ -2,7 +2,7 @@ import SolutionDetailPage from "../SolutionDetailPage";
 import { getSolutionBySlug } from "../solution-data";
 
 export const metadata = {
-  title: "企业办公自动化 AI 方案 | AI办公工具箱",
+  title: "企业办公自动化 AI 方案 | AI WorkBox",
   description: "面向中小企业、行政、人事和项目团队的 AI 办公自动化方案。"
 };
 

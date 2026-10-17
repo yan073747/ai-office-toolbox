@@ -70,7 +70,7 @@ function ResetPasswordForm() {
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white">
               <Sparkles className="h-5 w-5" />
             </span>
-            <span className="font-semibold text-slate-950">AI办公工具箱</span>
+            <span className="font-semibold text-slate-950">AI WorkBox</span>
           </Link>
 
           <div className="mt-10">

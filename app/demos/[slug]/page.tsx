@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: DemoDetailPageProps) {
 
   if (!demo) {
     return {
-      title: "AI Agent 作品集 | AI办公工具箱"
+      title: "AI Agent 作品集 | AI WorkBox"
     };
   }
 

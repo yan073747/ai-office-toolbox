@@ -3,15 +3,15 @@ import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "隐私政策 | AI办公工具箱",
-  description: "AI办公工具箱隐私政策，说明信息收集、文件上传、数据处理、第三方服务和用户权利。"
+  title: "隐私政策 | AI WorkBox",
+  description: "AI WorkBox隐私政策，说明信息收集、文件上传、数据处理、第三方服务和用户权利。"
 };
 
 const sections = [
   {
     title: "我们收集哪些信息",
     content: [
-      "当你使用 AI办公工具箱时，我们可能会收集你主动提交的信息，例如表单内容、上传文件、联系方式、业务需求描述以及工具使用过程中填写的文本。",
+      "当你使用 AI WorkBox时，我们可能会收集你主动提交的信息，例如表单内容、上传文件、联系方式、业务需求描述以及工具使用过程中填写的文本。",
       "在网站运行过程中，我们也可能收集必要的技术信息，例如浏览器类型、访问时间、页面路径、设备信息和服务错误日志，用于保障网站稳定运行。"
     ]
   },
@@ -103,11 +103,11 @@ export default function PrivacyPage() {
 
       <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-[800px]">
-          <p className="text-sm font-semibold text-blue-600">AI办公工具箱</p>
+          <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
           <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">隐私政策</h1>
           <p className="mt-5 text-sm leading-7 text-slate-500">最后更新日期：2026-06-03</p>
           <p className="mt-6 text-base leading-8 text-slate-600">
-            本隐私政策说明 AI办公工具箱在提供网站和 AI 办公工具服务时，如何收集、使用、处理和保护相关信息。使用本网站即表示你已阅读并理解本政策。
+            本隐私政策说明 AI WorkBox在提供网站和 AI 办公工具服务时，如何收集、使用、处理和保护相关信息。使用本网站即表示你已阅读并理解本政策。
           </p>
         </div>
       </section>
@@ -155,7 +155,7 @@ function LegalFooter() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="font-semibold text-slate-950">AI办公工具箱</span>
+            <span className="font-semibold text-slate-950">AI WorkBox</span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
             Office AI Toolbox，面向个人、小团队、个体户和中小企业的 AI 办公效率工具网站。
@@ -176,7 +176,7 @@ function LegalFooter() {
         ))}
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 AI办公工具箱. All rights reserved.</p>
+        <p>© 2026 AI WorkBox. All rights reserved.</p>
         <p>Office AI Toolbox</p>
       </div>
     </footer>

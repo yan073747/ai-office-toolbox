@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, ClipboardList, MessageSquareText, Users } fro
 import { solutionHighlights, solutions } from "./solution-data";
 
 export const metadata = {
-  title: "行业方案 | AI办公工具箱",
+  title: "行业方案 | AI WorkBox",
   description: "面向电商运营和外贸跟单场景的 AI 办公工具组合方案。"
 };
 

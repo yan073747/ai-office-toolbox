@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 
 export const metadata = {
-  title: "AI Agent 作品集 | AI办公工具箱",
+  title: "AI Agent 作品集 | AI WorkBox",
   description: "查看可在线体验的 AI Agent 项目作品集，包含企业 RAG 工单助手、PromptOps、多 Agent 文档工作流、跨境 Listing Agent 和 Enterprise MCP Agent。"
 };
 

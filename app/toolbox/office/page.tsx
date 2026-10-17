@@ -2,7 +2,7 @@ import OfficeToolboxClient from "@/components/OfficeToolboxClient";
 import Link from "next/link";
 
 export const metadata = {
-  title: "AI办公工具箱",
+  title: "AI WorkBox",
   description: "上传文件或输入内容，AI 自动帮你完成繁琐工作。"
 };
 

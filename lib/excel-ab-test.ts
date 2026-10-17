@@ -864,7 +864,7 @@ function createProjectSample(): ExcelSample {
   for (let index = 0; index < 80; index++) {
     rows.push([
       `TASK-${String(index + 1).padStart(4, "0")}`,
-      index % 2 ? "CRM升级" : "AI办公工具箱",
+      index % 2 ? "CRM升级" : "AI WorkBox",
       owners[index % owners.length],
       dateString(2026, 2, index + 1),
       dateString(2026, 2, index + 8),

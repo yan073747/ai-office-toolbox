@@ -127,11 +127,11 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-blue-200">
                   <Sparkles className="h-5 w-5" />
                 </span>
-                <span className="font-semibold">AI办公工具箱</span>
+                <span className="font-semibold">AI WorkBox</span>
               </Link>
 
               <div className="mt-16">
-                <h1 className="text-4xl font-semibold leading-tight tracking-normal">欢迎使用 AI办公工具箱</h1>
+                <h1 className="text-4xl font-semibold leading-tight tracking-normal">欢迎使用 AI WorkBox</h1>
                 <p className="mt-5 text-base leading-8 text-slate-300">
                   登录后可使用免费额度，查看历史生成记录，并管理你的工具使用额度。
                 </p>
@@ -155,7 +155,7 @@ export default function AuthPageClient({ mode }: { mode: AuthMode }) {
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white">
                     <Sparkles className="h-5 w-5" />
                   </span>
-                  <span className="font-semibold text-slate-950">AI办公工具箱</span>
+                  <span className="font-semibold text-slate-950">AI WorkBox</span>
                 </Link>
                 <h2 className="text-3xl font-semibold tracking-normal text-slate-950">{title}</h2>
                 <p className="mt-3 text-sm leading-6 text-slate-500">{subtitle}</p>

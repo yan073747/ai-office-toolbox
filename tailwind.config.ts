@@ -9,7 +9,20 @@ const config: Config = {
         muted: "#667085",
         line: "#E4E7EC",
         soft: "#F6F7F9",
-        brand: "#2563EB"
+        brand: "#2563EB",
+        // ---- E 骨架 + A 排版 · 暖纸色系 ----
+        paper: "#FBF8F2",
+        paper2: "#F6F2E9",
+        inkd: "#1B1A17",
+        ink2: "#4F4838",
+        mute: "#948A76",
+        wline: "#E3DCCE",
+        wline2: "#EFE9DC",
+        accent: "#B0512A",
+        deep: "#1B1A17"
+      },
+      maxWidth: {
+        site: "1000px"
       },
       boxShadow: {
         card: "0 12px 30px rgba(16, 24, 40, 0.06)"

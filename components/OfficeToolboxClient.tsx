@@ -697,7 +697,7 @@ export default function OfficeToolboxClient() {
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-200">AI办公工具箱</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-200">AI WorkBox</p>
             <h1 className="mt-1 text-lg font-semibold tracking-normal text-white sm:text-xl">智能办公处理台</h1>
           </div>
           <button

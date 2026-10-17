@@ -1,153 +1,138 @@
 "use client";
 
-import { Menu, Sparkles, X } from "lucide-react";
-import { getCurrentUser, logoutUser } from "@/lib/user-store";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { LocalUser } from "@/lib/user-store";
 
 const navItems = [
-  { label: "首页", href: "/" },
-  { label: "工具演示", href: "/tools" },
-  { label: "Agent作品集", href: "/demos" },
-  { label: "关于", href: "/about" }
+  { label: "能做什么", href: "/#services" },
+  { label: "做过的", href: "/#cases" },
+  { label: "免费工具", href: "/tools" },
+  { label: "技术演示", href: "/demos" }
 ];
 
 export default function SiteHeader() {
-  const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<LocalUser | null>(null);
 
+  // 打开抽屉时锁 body 滚动，Esc 可关
   useEffect(() => {
-    refreshUser();
+    if (!open) return;
 
-    function handleUserUpdate() {
-      refreshUser();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
     }
 
-    window.addEventListener("storage", handleUserUpdate);
-    window.addEventListener("ai-toolbox-user-updated", handleUserUpdate);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("storage", handleUserUpdate);
-      window.removeEventListener("ai-toolbox-user-updated", handleUserUpdate);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [open]);
 
-  async function refreshUser() {
-    setUser(await getCurrentUser());
-  }
-
-  async function handleLogout() {
-    await logoutUser();
-    setUser(null);
-    setOpen(false);
-    router.push("/");
+  function isActive(href: string) {
+    if (href.startsWith("/#")) return false;
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-white/92 backdrop-blur-xl">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-950 text-white shadow-sm">
-            <Sparkles className="h-4 w-4" />
+    <header className="site-header sticky top-0 z-50 border-b border-wline bg-paper">
+      <div className="mx-auto flex h-[66px] max-w-site items-center justify-between gap-5 px-5">
+        <Link href="/" className="flex flex-none items-center gap-[10px]" aria-label="AI WorkBox 首页">
+          <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[3px] bg-accent text-[14px] font-bold leading-none text-white">
+            W
           </span>
-          <span className="text-base font-semibold tracking-normal text-stone-950">AI WorkBox</span>
+          <span>
+            <span className="block text-[15px] font-semibold leading-[1.15] tracking-[0.01em] text-inkd">AI WorkBox</span>
+            <span className="mt-[3px] block text-[11px] leading-[1.4] text-mute">企业 AI 落地 · 佛山顺德</span>
+          </span>
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-6 md:flex" aria-label="主导航">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="text-sm font-medium text-stone-600 transition hover:text-stone-950">
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`border-b pb-0.5 text-[14px] leading-[1.6] transition ${
+                isActive(item.href)
+                  ? "border-accent text-inkd"
+                  : "border-transparent text-ink2 hover:border-accent hover:text-inkd"
+              }`}
+            >
               {item.label}
             </Link>
           ))}
-        </div>
+        </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          {user ? (
-            <>
-              <Link href="/dashboard" className="inline-flex h-10 max-w-52 items-center justify-center truncate rounded-lg px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100">
-                {user.email || "用户中心"}
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800"
-              >
-                退出登录
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100">
-                登录
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800"
-              >
-                在线体验
-              </Link>
-            </>
-          )}
+        <div className="flex flex-none items-center gap-2">
+          <Link
+            href="/contact"
+            className="hover-lift hidden h-10 items-center justify-center rounded-[3px] bg-deep px-5 text-[14px] font-semibold text-paper transition hover:bg-black md:inline-flex"
+          >
+            聊一聊
+          </Link>
+          <button
+            type="button"
+            aria-label={open ? "关闭菜单" : "打开菜单"}
+            aria-expanded={open}
+            aria-controls="site-mobile-menu"
+            onClick={() => setOpen((value) => !value)}
+            className="inline-flex h-10 w-10 flex-col items-center justify-center gap-[4px] rounded-[3px] border border-wline text-inkd md:hidden"
+          >
+            <span aria-hidden="true" className="block h-[1.5px] w-4 bg-current" />
+            <span aria-hidden="true" className="block h-[1.5px] w-4 bg-current" />
+            <span aria-hidden="true" className="block h-[1.5px] w-4 bg-current" />
+          </button>
         </div>
-
-        <button
-          type="button"
-          aria-label={open ? "关闭菜单" : "打开菜单"}
-          aria-expanded={open}
-          aria-controls="site-mobile-menu"
-          onClick={() => setOpen((value) => !value)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-700 md:hidden"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </nav>
+      </div>
 
       {open ? (
-        <div id="site-mobile-menu" className="border-t border-stone-200 bg-white px-5 py-4 shadow-lg md:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
+        <div id="site-mobile-menu" className="fixed inset-0 z-[60] md:hidden">
+          <button
+            type="button"
+            aria-label="关闭菜单"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 h-full w-full bg-deep/35"
+          />
+          <div className="absolute right-0 top-0 flex h-full w-[min(78vw,320px)] flex-col border-l border-wline bg-paper px-4 pb-6 pt-4 shadow-2xl">
+            <div className="mb-2 flex items-center justify-between border-b border-wline2 pb-3 text-[11px] tracking-[0.08em] text-mute">
+              <span>菜单</span>
+              <button
+                type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-950"
+                aria-label="关闭菜单"
+                className="text-[18px] leading-none text-inkd"
               >
-                {item.label}
-              </Link>
-            ))}
-            {user ? (
-              <div className="mt-3 grid grid-cols-2 gap-3">
+                ×
+              </button>
+            </div>
+
+            <nav aria-label="移动端导航" className="flex-1">
+              {navItems.map((item) => (
                 <Link
-                  href="/dashboard"
+                  key={item.href}
+                  href={item.href}
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-11 items-center justify-center rounded-lg border border-stone-200 text-sm font-semibold text-stone-700"
+                  className="block border-b border-wline2 py-3 text-[15px] font-medium text-inkd"
                 >
-                  用户中心
+                  {item.label}
                 </Link>
-                <button type="button" onClick={handleLogout} className="inline-flex h-11 items-center justify-center rounded-lg bg-stone-950 text-sm font-semibold text-white">
-                  退出登录
-                </button>
-              </div>
-            ) : (
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex h-11 items-center justify-center rounded-lg border border-stone-200 text-sm font-semibold text-stone-700"
-                >
-                  登录
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex h-11 items-center justify-center rounded-lg bg-stone-950 text-sm font-semibold text-white"
-                >
-                  在线体验
-                </Link>
-              </div>
-            )}
+              ))}
+            </nav>
+
+            <Link
+              href="/contact"
+              onClick={() => setOpen(false)}
+              className="block rounded-[3px] bg-deep py-3 text-center text-[15px] font-semibold text-paper"
+            >
+              聊一聊
+            </Link>
+            <Link href="/login" onClick={() => setOpen(false)} className="mt-3 block text-center text-[12px] text-mute">
+              已有账户？登录
+            </Link>
           </div>
         </div>
       ) : null}
