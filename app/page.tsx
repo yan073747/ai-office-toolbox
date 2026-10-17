@@ -103,10 +103,10 @@ export default function Home() {
             </span>
             <h1 className="mt-4 text-[27px] font-semibold leading-[1.4] tracking-[-0.012em] text-inkd md:text-[38px] md:leading-[1.38]">
               厂里店里每天重复的活，
-              <br className="hidden sm:block" />
+              <br />
               交给我做成自动的
             </h1>
-            <p className="mt-4 max-w-[430px] text-[15px] leading-[1.95] text-ink2 md:text-[16px]">
+            <p className="mt-4 max-w-[470px] text-[15px] leading-[1.95] text-ink2 md:text-[16px]">
               客服天天回一样的问题、资料散在几个地方找不到、有人整天在做表格。这些都能做成系统，一个人做完，价钱写在下面。
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -149,8 +149,8 @@ export default function Home() {
                   标准保修 <b className="font-semibold text-inkd">12 个月</b>，从签收日起算。商用场景可延保至{" "}
                   <b className="font-semibold text-inkd">24 个月</b>，下单时勾选就行。
                 </p>
-                <p className="mt-2 border-t border-dashed border-wline pt-2 text-[10.5px] leading-[1.6] text-mute">
-                  来源：《售后服务手册 v3.2》第 4 章第 2 节　｜　置信度 0.94　｜　拿不准会自动转人工
+                <p className="mt-2 border-t border-dashed border-wline pt-2 text-[10.5px] leading-[1.7] text-mute">
+                  来源：《售后服务手册 v3.2》 · 置信度 0.94 · 拿不准会转人工
                 </p>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-px overflow-hidden rounded-[3px] border border-wline bg-wline">

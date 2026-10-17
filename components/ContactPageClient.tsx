@@ -255,10 +255,8 @@ export default function ContactPageClient() {
           <div className="border-t border-wline pt-4 md:border-t-0 md:pt-0">
             <b className="block text-[13.5px] font-semibold text-inkd">不想填表？直接找我</b>
             <p className="mt-2 text-[13px] leading-[1.9] text-ink2">
-              <a href={CONTACT_MAILTO} className="border-b border-[#DFC3B2] pb-0.5 font-semibold text-accent">
-                发一封邮件给我
-              </a>
-              ，说明来意就行。邮箱不显示在页面上，点了会直接打开你的邮件客户端。
+              <a href={CONTACT_MAILTO} className="border-b border-[#DFC3B2] pb-0.5 font-semibold text-accent">发一封邮件给我</a>
+              {"，说明来意就行。邮箱不显示在页面上，点了会直接打开你的邮件客户端。"}
             </p>
             <p className="mt-2 text-[12px] leading-[1.8] text-mute">微信：暂时走邮件或表单，我收到后会加你。</p>
           </div>
