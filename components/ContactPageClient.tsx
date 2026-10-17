@@ -1,6 +1,6 @@
 "use client";
 
-import { CONTACT_MAILTO } from "@/lib/contact-info";
+import { AUTHOR_DOUYIN_ID, AUTHOR_EMAIL, CONTACT_MAILTO } from "@/lib/contact-info";
 import { FormEvent, useMemo, useState } from "react";
 
 const budgets = ["3,000 以下", "3,000–6,000", "6,000–15,000", "15,000 以上", "还不确定"];
@@ -44,6 +44,17 @@ export default function ContactPageClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [done, setDone] = useState(false);
+  const [copied, setCopied] = useState<"email" | "douyin" | null>(null);
+
+  async function copyValue(value: string, target: "email" | "douyin") {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(target);
+      window.setTimeout(() => setCopied(null), 1600);
+    } catch {
+      setCopied(null);
+    }
+  }
 
   const contactType = useMemo(() => detectContactType(form.contact), [form.contact]);
 
@@ -254,11 +265,38 @@ export default function ContactPageClient() {
         <aside>
           <div className="border-t border-wline pt-4 md:border-t-0 md:pt-0">
             <b className="block text-[13.5px] font-semibold text-inkd">不想填表？直接找我</b>
-            <p className="mt-2 text-[13px] leading-[1.9] text-ink2">
-              <a href={CONTACT_MAILTO} className="border-b border-[#DFC3B2] pb-0.5 font-semibold text-accent">发一封邮件给我</a>
-              {"，说明来意就行。邮箱不显示在页面上，点了会直接打开你的邮件客户端。"}
+
+            <div className="mt-2.5 space-y-2">
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-[13px] text-mute">邮箱</span>
+                <span className="font-mono text-[12.5px] text-inkd">{AUTHOR_EMAIL}</span>
+                <button
+                  type="button"
+                  onClick={() => copyValue(AUTHOR_EMAIL, "email")}
+                  className="border-b border-[#DFC3B2] pb-0.5 text-[12px] font-semibold text-accent"
+                >
+                  {copied === "email" ? "已复制" : "复制"}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-[13px] text-mute">抖音号</span>
+                <span className="font-mono text-[12.5px] text-inkd">{AUTHOR_DOUYIN_ID}</span>
+                <button
+                  type="button"
+                  onClick={() => copyValue(AUTHOR_DOUYIN_ID, "douyin")}
+                  className="border-b border-[#DFC3B2] pb-0.5 text-[12px] font-semibold text-accent"
+                >
+                  {copied === "douyin" ? "已复制" : "复制"}
+                </button>
+              </div>
+            </div>
+
+            <p className="mt-2.5 rounded-[3px] bg-paper2 px-3 py-2 text-[12px] leading-[1.8] text-mute">
+              微信暂时不公开，免得被加爆。你留了联系方式，我会主动加你。
             </p>
-            <p className="mt-2 text-[12px] leading-[1.8] text-mute">微信：暂时走邮件或表单，我收到后会加你。</p>
+            <p className="mt-2 text-[12px] leading-[1.8] text-mute">
+              不方便复制？<a href={CONTACT_MAILTO} className="font-semibold text-accent">点这里直接打开邮件</a>
+            </p>
           </div>
 
           <div className="mt-6 border-t border-wline pt-4">

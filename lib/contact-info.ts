@@ -1,4 +1,4 @@
-export const AUTHOR_EMAIL = "19217656722@163.com";
+export const AUTHOR_EMAIL = "434486253@qq.com";
 export const AUTHOR_DOUYIN_ID = "58016922716";
 
 export const CONTACT_MAIL_SUBJECT = "AI WorkBox 咨询";
