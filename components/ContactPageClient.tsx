@@ -112,15 +112,6 @@ export default function ContactPageClient() {
 
   return (
     <main className="bg-paper text-inkd">
-      <div className="bg-deep text-[12.5px] leading-[1.7] text-[#B7AE9B]">
-        <div className="mx-auto flex max-w-site flex-wrap justify-between gap-x-5 gap-y-1 px-5 py-2">
-          <span>周一至周六 10:00–20:00　·　佛山市顺德区，可上门</span>
-          <span>
-            本月还能接 <b className="font-semibold text-paper">1 个</b>项目
-          </span>
-        </div>
-      </div>
-
       <div className="mx-auto max-w-site px-5 pb-6 pt-9 md:pt-11">
         <span className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
           不用填一堆资料

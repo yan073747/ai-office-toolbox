@@ -39,7 +39,17 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-wline bg-paper">
+    <>
+      <div className="bg-deep px-5 text-[12.5px] leading-[1.7] text-[#B7AE9B]">
+        <div className="mx-auto flex max-w-site flex-wrap justify-between gap-x-5 gap-y-1 py-2">
+          <span>周一至周六 10:00–20:00　·　佛山市顺德区，可上门</span>
+          <span>
+            本月还能接 <b className="font-semibold text-paper">1 个</b>项目
+          </span>
+        </div>
+      </div>
+
+      <header className="site-header sticky top-0 z-50 border-b border-wline bg-paper">
       <div className="mx-auto flex h-[66px] max-w-site items-center justify-between gap-5 px-5">
         <Link href="/" className="flex flex-none items-center gap-[10px]" aria-label="AI WorkBox 首页">
           <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[3px] bg-accent text-[14px] font-bold leading-none text-white">
@@ -136,6 +146,7 @@ export default function SiteHeader() {
           </div>
         </div>
       ) : null}
-    </header>
+      </header>
+    </>
   );
 }

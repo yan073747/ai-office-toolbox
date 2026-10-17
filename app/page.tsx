@@ -94,16 +94,6 @@ export default function Home() {
     <div className="bg-paper text-inkd">
       <SiteHeader />
 
-      {/* 顶部信息条 */}
-      <div className="bg-deep text-[12.5px] leading-[1.7] text-[#B7AE9B]">
-        <div className="mx-auto flex max-w-site flex-wrap justify-between gap-x-5 gap-y-1 px-5 py-2">
-          <span>周一至周六 10:00–20:00　·　佛山市顺德区，可上门</span>
-          <span>
-            本月还能接 <b className="font-semibold text-paper">1 个</b>项目
-          </span>
-        </div>
-      </div>
-
       {/* 首屏 */}
       <section className="px-5 pb-9 pt-10 md:pb-12 md:pt-14">
         <div className="mx-auto grid max-w-site items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)] md:gap-12">
