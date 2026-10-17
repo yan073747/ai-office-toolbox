@@ -202,7 +202,7 @@ export default function Home() {
         <div className="mx-auto max-w-site">
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <div>
-              <p className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-accent">服务与价格</p>
+              <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">服务与价格</p>
               <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">四件事，做得最熟</h2>
             </div>
             <p className="max-w-[520px] text-[13px] leading-[1.75] text-mute">
@@ -224,7 +224,7 @@ export default function Home() {
                   {service.desc}
                   <em className="mt-0.5 block text-[12px] not-italic leading-[1.7] text-mute">{service.note}</em>
                 </p>
-                <p className="col-span-2 text-[12px] text-mute md:col-span-1 md:col-start-4 md:row-start-1 md:text-right">
+                <p className="col-span-2 text-right text-[12px] text-mute md:col-span-1 md:col-start-4 md:row-start-1">
                   {service.duration}
                 </p>
               </div>
