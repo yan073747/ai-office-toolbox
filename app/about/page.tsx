@@ -1,168 +1,200 @@
-import SiteHeader from "@/components/SiteHeader";
-import {
-  ArrowRight,
-  BarChart3,
-  Blocks,
-  Bot,
-  CheckCircle2,
-  Code2,
-  Gauge,
-  GitPullRequest,
-  Layers3,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Workflow
-} from "lucide-react";
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import type { Metadata } from "next";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
-export const metadata = {
-  title: "关于项目 | AI WorkBox",
-  description: "了解 AI WorkBox从办公工具到 RAG、评测、多 Agent 与 MCP 项目的产品设计和工程实现。"
+export const metadata: Metadata = {
+  title: "关于我｜AI WorkBox",
+  description:
+    "AI WorkBox 是一个人做的小工作室，在佛山顺德。过去一年把 6 个 AI 应用从需求梳理做到上线部署，覆盖知识库问答、客服自动化、多 Agent 工作流与企业工具调用。"
 };
 
-const engineeringAreas = [
+const facts = [
+  ["6 个", "已上线系统，全部可点开"],
+  ["1 个人", "从需求到部署，不转包"],
+  ["1–3 周", "常见交付周期"],
+  ["顺德", "本地可上门，外地可远程"]
+];
+
+const boundaries = [
   {
-    title: "应用产品化",
-    description: "把模型能力拆解成明确输入、过程反馈、结构化输出与可恢复状态。",
-    icon: Layers3
+    title: "知识检索（RAG）",
+    desc: "文档清洗入库、切片建索引、答案带出处、置信度判断、拿不准转人工。这些不是「接个大模型就行」，每一条都要单独调。"
   },
   {
-    title: "RAG 与知识检索",
-    description: "完成文档入库、向量检索、来源引用、置信度控制和人工兜底。",
-    icon: Search
-  },
-  {
-    title: "Agent 工作流",
-    description: "用角色分工、状态流转和工具调用处理一次问答无法完成的复杂任务。",
-    icon: Workflow
+    title: "Agent 编排",
+    desc: "一件事需要好几步才能做完时，把计划、执行、检查拆给不同角色，中间状态可追溯，某一步失败能重来。"
   },
   {
     title: "评测与可靠性",
-    description: "通过测试集、版本对比、自动评分、日志和失败案例持续改进效果。",
-    icon: Gauge
+    desc: "上线前用测试集批量跑一遍打分，比两个版本哪个更好。出了问题能查日志、能定位到哪一步、能降级兜底。"
+  },
+  {
+    title: "企业工具接入（MCP）",
+    desc: "把公司的客户、订单、报价、待办接给 AI，同时做角色权限——销售和经理能做的事不一样，越权自动拦截。"
   }
 ];
 
-const stackLayers = [
-  { title: "界面与交互", detail: "Next.js / React / TypeScript / Tailwind CSS", icon: Code2 },
-  { title: "服务与数据", detail: "FastAPI / Node.js / SQLite / Redis", icon: Blocks },
-  { title: "AI 应用工程", detail: "RAG / Prompt 评测 / LangGraph / MCP", icon: Bot },
-  { title: "质量与交付", detail: "测试 / Docker / 日志 / 降级与兜底", icon: ShieldCheck }
+const stack = [
+  ["界面", "Next.js / React / TypeScript / Tailwind CSS"],
+  ["服务", "FastAPI / Node.js / SQLite / Redis"],
+  ["AI 应用工程", "RAG / Prompt 评测 / LangGraph / MCP"],
+  ["交付", "测试 / Docker / 日志 / 降级与兜底"]
 ];
 
-const principles = [
-  "先定义真实任务和成功标准，再选择模型与技术方案",
-  "让输入要求、处理状态和结果边界对用户保持清晰",
-  "记录检索来源、Agent Trace 与工具调用，保证过程可观察",
-  "用测试、评测和失败兜底验证稳定性，而非只展示理想结果"
+const projects = [
+  { name: "知识库工单助手", url: "https://rag-ticket.aiworkbox.cn", note: "42 个测试用例全过" },
+  { name: "多 AI 文档工作流", url: "https://docflow.aiworkbox.cn", note: "432 条记录可回溯" },
+  { name: "接公司数据的助手", url: "https://mcp.aiworkbox.cn", note: "5 类工具 · 权限拦截" },
+  { name: "AI 效果评测平台", url: "https://promptops.aiworkbox.cn", note: "上线前批量打分" },
+  { name: "跨境商品文案优化", url: "https://listing.aiworkbox.cn", note: "多语言 + SEO 打分" },
+  { name: "企业内部数字化中台", url: "", note: "飞书 · 内部系统" }
 ];
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <div className="bg-paper text-inkd">
       <SiteHeader />
 
-      <section className="overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-              <Sparkles className="h-4 w-4 text-blue-600" />
-              关于这个作品集
-            </div>
-            <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">
-              从可用工具到完整的 AI 应用工程
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-              AI WorkBox是一组面向真实办公任务的产品与工程实践。它不仅展示模型能做什么，也呈现需求拆解、交互设计、后端服务、可靠性控制和部署交付如何组成完整系统。
+      <section className="px-5 pb-8 pt-9 md:pt-11">
+        <div className="mx-auto max-w-site">
+          <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+            关于我
+          </p>
+          <h1 className="mt-3.5 max-w-[620px] text-[26px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[34px]">
+            一个人，一年，六个能跑起来的系统
+          </h1>
+          <div className="mt-4 grid max-w-[680px] gap-2.5 text-[15px] leading-[1.95] text-ink2">
+            <p>AI WorkBox 是我一个人做的小工作室，在佛山顺德。</p>
+            <p>
+              过去一年，我把 6 个 AI 应用从需求梳理做到上线部署，覆盖知识库问答、客服自动化、多 AI 协作工作流和企业工具调用。
+              每一个现在都还开着，你可以直接点进去用。
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href="/demos" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800">
-                查看 Agent 作品 <ArrowRight className="h-4 w-4" />
-              </Link>
-              <a href="https://github.com/yan073747/ai-office-toolbox" target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
-                <Code2 className="h-4 w-4" /> 查看源代码
-              </a>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_28px_90px_rgba(15,23,42,0.1)]">
-            <div className="rounded-2xl bg-slate-950 p-6 text-white">
-              <div className="flex items-center justify-between gap-4">
-                <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">Engineering Map</p><h2 className="mt-3 text-2xl font-semibold">端到端实现范围</h2></div>
-                <GitPullRequest className="h-7 w-7 text-blue-200" />
-              </div>
-              <div className="mt-6 space-y-3">
-                {["产品流程与响应式交互", "服务端接口与数据持久化", "模型、RAG 与 Agent 编排", "测试、评测与部署验证"].map((item, index) => (
-                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-sm font-semibold text-blue-100">0{index + 1}</span>
-                    <span className="text-sm font-semibold text-slate-100">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p className="font-semibold text-inkd">
+              我不卖概念，也不卖课。我卖的是能跑起来的东西——而且你可以先看演示再决定。
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeader eyebrow="能力结构" title="围绕 AI 应用落地组织工程能力" description="从单点办公效率工具逐步延伸到有检索、有评测、有编排、有工具协议的复杂系统。" />
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {engineeringAreas.map((item) => <FeatureCard key={item.title} item={item} />)}
-          </div>
+      {/* 四格事实 */}
+      <div className="border-y border-wline">
+        <div className="mx-auto grid max-w-site grid-cols-2 px-5 md:grid-cols-4">
+          {facts.map(([value, label], index) => (
+            <div
+              key={label}
+              className={[
+                "py-4 md:py-5",
+                index % 2 === 1 ? "pl-4" : "",
+                index > 1 ? "border-t border-wline2 md:border-t-0" : "",
+                index > 0 ? "md:border-l md:border-wline2 md:pl-6" : ""
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <b className="block text-[19px] font-semibold leading-[1.3] text-inkd md:text-[21px]">{value}</b>
+              <span className="text-[12px] leading-[1.6] text-mute">{label}</span>
+            </div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section className="border-y border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div>
-            <p className="text-sm font-semibold text-blue-600">技术与交付</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">从前端体验到模型编排的完整链路</h2>
-            <p className="mt-5 text-base leading-8 text-slate-600">技术选型服务于具体问题，并在作品详情中说明业务场景、实现方式和可验证结果。</p>
-            <Link href="/tools" className="mt-7 inline-flex h-11 items-center gap-2 text-sm font-semibold text-slate-950 transition hover:text-blue-700">先体验办公工具 <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {stackLayers.map(({ title, detail, icon: Icon }) => (
-              <article key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Icon className="h-5 w-5" /></span>
-                <h3 className="mt-5 text-base font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
-              </article>
+      {/* 能做到什么程度 */}
+      <section className="border-b border-wline px-5 py-9 md:py-12">
+        <div className="mx-auto max-w-site">
+          <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">能做到什么程度</p>
+          <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">四个地方，我抠得比较细</h2>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 md:gap-x-10 md:gap-y-7">
+            {boundaries.map((item) => (
+              <div key={item.title} className="border-t-2 border-deep pt-3.5">
+                <b className="block text-[14.5px] font-semibold text-inkd">{item.title}</b>
+                <p className="mt-1.5 text-[13px] leading-[1.9] text-ink2">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200 bg-slate-950 p-7 text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)] sm:p-10">
-          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-            <div><p className="text-sm font-semibold text-blue-200">实现原则</p><h2 className="mt-3 text-3xl font-semibold tracking-normal">让 AI 系统可用、可观察、可复核</h2><p className="mt-5 text-sm leading-7 text-slate-300">关注实际使用中的边界与失败路径，避免只围绕一次成功回答设计产品。</p></div>
-            <div className="grid gap-3">
-              {principles.map((item) => <div key={item} className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-4"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /><p className="text-sm leading-7 text-slate-200">{item}</p></div>)}
-            </div>
+      {/* 技术栈 */}
+      <section className="border-b border-wline px-5 py-9 md:py-12">
+        <div className="mx-auto max-w-site">
+          <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">用什么做</p>
+          <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">技术栈</h2>
+          <div className="mt-5 border-t border-wline">
+            {stack.map(([label, detail]) => (
+              <div key={label} className="grid gap-1 border-b border-wline2 py-3 md:grid-cols-[110px_1fr] md:items-baseline md:gap-5">
+                <span className="text-[12.5px] text-mute">{label}</span>
+                <span className="text-[13.5px] leading-[1.8] text-ink2">{detail}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-          <BarChart3 className="h-8 w-8 text-blue-600" />
-          <h2 className="mt-5 text-3xl font-semibold tracking-normal sm:text-4xl">继续查看可运行的项目证据</h2>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">每个 Agent 项目都包含业务问题、技术栈、执行流程、工程亮点与在线演示状态。</p>
-          <Link href="/demos" className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800">进入 Agent 作品集 <ArrowRight className="h-4 w-4" /></Link>
+      {/* 项目 */}
+      <section className="border-b border-wline px-5 py-9 md:py-12">
+        <div className="mx-auto max-w-site">
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+            <div>
+              <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">做过的</p>
+              <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">六个，都能点开</h2>
+            </div>
+            <Link href="/demos" className="border-b border-[#DFC3B2] pb-0.5 text-[13.5px] font-semibold text-accent">
+              看详细说明 →
+            </Link>
+          </div>
+          <div className="mt-5 border-t border-wline">
+            {projects.map((item) => (
+              <div key={item.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-wline2 py-3">
+                <span className="text-[14.5px] font-medium text-inkd">{item.name}</span>
+                <span className="text-[12px] text-mute">{item.note}</span>
+                {item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12.5px] font-semibold text-accent"
+                  >
+                    打开 →
+                  </a>
+                ) : (
+                  <span className="text-[12px] text-mute">内部系统</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-    </main>
+
+      {/* CTA */}
+      <section className="bg-deep px-5 py-10 md:py-12">
+        <div className="mx-auto flex max-w-site flex-wrap items-center justify-between gap-7">
+          <div>
+            <h2 className="text-[22px] font-semibold leading-[1.5] text-paper md:text-[24px]">想看看它能不能用在你的业务上</h2>
+            <p className="mt-2 max-w-[420px] text-[13px] leading-[1.8] text-[#B7AE9B]">
+              源码在 GitHub 上全部公开，不用信我说的话，自己看。
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <a
+              href="https://github.com/yan073747/ai-office-toolbox"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13.5px] font-semibold text-paper underline decoration-[#7A7264] underline-offset-4"
+            >
+              github.com/yan073747/ai-office-toolbox
+            </a>
+            <Link
+              href="/contact"
+              className="hover-lift inline-flex h-12 items-center justify-center rounded-[3px] bg-accent px-6 text-[15px] font-semibold text-white transition hover:bg-[#9C4525]"
+            >
+              说说你的情况 →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
+    </div>
   );
-}
-
-function FeatureCard({ item }: { item: { title: string; description: string; icon: LucideIcon } }) {
-  const Icon = item.icon;
-  return <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700"><Icon className="h-5 w-5" /></span><h3 className="mt-5 text-lg font-semibold">{item.title}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p></article>;
-}
-
-function SectionHeader({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
-  return <div className="mx-auto max-w-3xl text-center">{eyebrow ? <p className="text-sm font-semibold text-blue-600">{eyebrow}</p> : null}<h2 className="mt-3 text-2xl font-semibold tracking-normal sm:text-4xl">{title}</h2>{description ? <p className="mt-4 text-base leading-8 text-slate-600">{description}</p> : null}</div>;
 }

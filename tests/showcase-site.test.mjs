@@ -114,9 +114,13 @@ test("contact form asks only four things and drops the contradictory budget ladd
   }
 
   // 旧表单的重量级字段必须消失
-  for (const retired of ["公司 / 团队名称", "所属行业", "抖音号", "上传示例文件"]) {
+  for (const retired of ["公司 / 团队名称", "所属行业", "上传示例文件"]) {
     assert.equal(includes(page.html, retired), false, `contact must no longer ask for ${retired}`);
   }
+
+  // 抖音号不再是表单字段，但作为可复制的联系方式保留在侧栏
+  assert.equal(includes(page.html, "抖音号"), true, "Douyin must stay reachable as a contact channel");
+  assert.equal(includes(page.html, "微信暂时不公开"), true, "WeChat must stay private by design");
 
   // 预算档位要和首页报价对齐，且默认一个都不选
   assert.equal(includes(page.html, "500 元以内"), false, "旧预算档位必须去掉");
