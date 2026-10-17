@@ -1,4 +1,5 @@
 import PricingPageClient from "@/components/PricingPageClient";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 export const metadata = {
@@ -8,9 +9,10 @@ export const metadata = {
 
 export default function PricingPage() {
   return (
-    <>
+    <div className="bg-paper text-inkd">
       <SiteHeader />
       <PricingPageClient />
-    </>
+      <SiteFooter />
+    </div>
   );
 }

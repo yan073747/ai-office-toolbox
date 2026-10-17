@@ -1,471 +1,152 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { agentDemos } from "@/lib/agent-demos";
-import {
-  ArrowRight,
-  BarChart3,
-  CalendarClock,
-  CheckCircle2,
-  ClipboardCheck,
-  ExternalLink,
-  FileDown,
-  FlaskConical,
-  Link2,
-  LockKeyhole,
-  Network,
-  Route,
-  ServerCog,
-  ShieldCheck,
-  UploadCloud,
-  Zap
-} from "lucide-react";
-import Link from "next/link";
 
-export const metadata = {
-  title: "AI Agent 作品集 | AI WorkBox",
-  description: "查看可在线体验的 AI Agent 项目作品集，包含企业 RAG 工单助手、PromptOps、多 Agent 文档工作流、跨境 Listing Agent 和 Enterprise MCP Agent。"
+export const metadata: Metadata = {
+  title: "技术演示｜AI WorkBox",
+  description:
+    "五个已上线的 AI 应用演示：企业知识库工单助手、Prompt 评测平台、多 Agent 文档工作流、跨境商品上架 Agent、企业 MCP 工具调用平台。都能直接点开用。"
 };
 
-const selectedDemo = agentDemos.find((demo) => demo.slug === "mcp-agent") ?? agentDemos[0];
-
-const endpointRows = agentDemos.map((demo) => ({
-  index: demo.index,
-  name: demo.name,
-  slug: demo.slug,
-  href: demo.liveUrl,
-  deployed: demo.deploymentStatus === "deployed"
-}));
-
-const workflowIcons = [UploadCloud, CheckCircle2, Network, FileDown];
-
-const recommendedJourney = [
-  { slug: "mcp-agent", label: "先看 MCP 工具调用", focus: "最贴近企业内部系统集成，能展示权限、参数校验和调用日志。" },
-  { slug: "rag-ticket", label: "再看 RAG 工单助手", focus: "说明知识库检索、来源引用和低置信度兜底。" },
-  { slug: "promptops", label: "补充 PromptOps", focus: "展示 Prompt 版本、批量评测和失败案例复盘能力。" },
-  { slug: "document-workflow", label: "展开多 Agent 流程", focus: "体现计划确认、Trace 观察、报告生成和下载链路。" },
-  { slug: "crossborder-listing", label: "最后看业务落地", focus: "用跨境 Listing 场景展示 A/B 评分、导出和无 Key 兜底。" }
-];
-
-const trustNotes = [
+const notes = [
   {
-    icon: ShieldCheck,
-    title: "公开演示数据",
-    body: "站点只使用样例客户、样例商品和样例文档，避免暴露真实客户数据。"
+    title: "都是真跑着的，不是截图",
+    body: "每个地址点进去就能操作。企业知识库问答那个有 42 条测试用例，全部通过；评测平台自己有 16 项测试。"
   },
   {
-    icon: LockKeyhole,
-    title: "无需真实密钥",
-    body: "演示优先采用 Mock LLM 或降级数据，适合公开在线查看。"
+    title: "用的是样例数据，不碰真客户",
+    body: "演示环境里都是样例客户、样例商品、样例文档。你公司真实数据接进来是另一套部署。"
   },
   {
-    icon: ClipboardCheck,
-    title: "可复盘链路",
-    body: "每个项目都围绕输入、执行、日志、结果或导出物组织，不只是一屏静态截图。"
+    title: "重点不在「AI 很聪明」",
+    body: "重点是答不出来的时候怎么办、答案从哪一段来的、出错能不能查到哪一步。这三件事决定它能不能在你公司用下去。"
   }
-];
-
-const capabilityRows = [
-  { capability: "知识库与 RAG", evidence: "文档入库、来源引用、置信度判断和低置信度转人工。", slug: "rag-ticket" },
-  { capability: "Prompt 评测", evidence: "Prompt 版本、测试集、批量评分、失败案例和迭代对比。", slug: "promptops" },
-  { capability: "工具调用", evidence: "MCP 工具权限、参数校验、规则编排、入参出参和调用日志。", slug: "mcp-agent" },
-  { capability: "多 Agent 工作流", evidence: "Planner / Analyst / Writer / Reviewer 串联计划、分析、写作和审核。", slug: "document-workflow" },
-  { capability: "业务流程自动化", evidence: "跨境 Listing、客服工单、CRM 销售和文档报告覆盖不同企业流程。", slug: "crossborder-listing" },
-  { capability: "Trace 与复盘", evidence: "页面重点展示状态、耗时、置信度、历史记录和任务执行轨迹。", slug: "document-workflow" },
-  { capability: "数据导出与交付", evidence: "报告、CSV、Excel、工单和评测结果都能作为业务侧交付物说明。", slug: "crossborder-listing" },
-  { capability: "安全演示与回退", evidence: "公开环境使用样例数据、Mock 或本地规则，保留真实服务接入空间。", slug: "mcp-agent" }
-];
-
-const iterationSteps = ["测试集 / 样例输入", "批量运行", "评分或置信度", "Badcase / 低置信度识别", "优化方向", "版本或历史复盘"];
-
-const iterationRows = [
-  { project: "PromptOps", slug: "promptops", focus: "Prompt 版本、测试集、自动评分、人审复核和失败案例沉淀。" },
-  { project: "RAG Ticket", slug: "rag-ticket", focus: "检索结果带来源和置信度，低置信度问题进入人工工单链路。" },
-  { project: "Listing Agent", slug: "crossborder-listing", focus: "A/B Listing 评分、推荐理由、二次优化和历史导出。" },
-  { project: "MCP Agent", slug: "mcp-agent", focus: "工具选择、权限拦截、入参出参、耗时和 Trace 复盘。" },
-  { project: "Document Workflow", slug: "document-workflow", focus: "任务计划、人工确认、执行 Trace、报告产出和历史记录。" }
 ];
 
 export default function AgentDemosPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <div className="bg-paper text-inkd">
       <SiteHeader />
 
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
-          <div>
-            <p className="text-sm font-semibold tracking-normal text-blue-700">可部署的 AI Agent 在线演示项目集</p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:mt-5 sm:text-6xl">
-              AI Agent 作品集
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
-              五个项目统一收纳在 aiworkbox.cn 下，访问者可以从一个入口查看业务场景、工程架构、技术栈和真实演示地址。
+      <section className="border-b border-wline px-5 pb-7 pt-9 md:pb-9 md:pt-11">
+        <div className="mx-auto max-w-site">
+          <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+            技术演示
+          </p>
+          <h1 className="mt-3.5 max-w-[600px] text-[26px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[34px]">
+            五个系统都还开着，你可以自己点开试
+          </h1>
+          <div className="mt-4 grid max-w-[660px] gap-2.5 text-[15px] leading-[1.95] text-ink2">
+            <p>
+              这些不是作品集里的配图，是能操作的站点。想看哪个直接点，用坏了也不影响我什么。
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-              {selectedDemo.deploymentStatus === "deployed" ? (
-                <a
-                  href={selectedDemo.liveUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-                >
-                  打开推荐演示
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              ) : (
-                <Link
-                  href={`/demos/${selectedDemo.slug}`}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-                >
-                  部署中 / 查看详情
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
-              <Link
-                href={`/demos/${selectedDemo.slug}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50"
-              >
-                查看案例详情
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)]">
-            <div className="flex flex-col items-start gap-3 border-b border-stone-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-stone-950">实时可用的演示地址</h2>
-                <p className="mt-1 text-xs text-stone-500">子域名可逐个接入真实服务，不需要购买新域名。</p>
-              </div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                全部可访问
-              </span>
-            </div>
-            <div className="divide-y divide-stone-100">
-              {endpointRows.map((row) => (
-                <Link
-                  key={row.index}
-                  href={row.deployed ? row.href : `/demos/${row.slug}`}
-                  className="grid grid-cols-[34px_minmax(0,1fr)] items-start gap-2 px-5 py-3 text-sm transition hover:bg-amber-50/70 sm:grid-cols-[44px_minmax(0,1fr)_auto] sm:items-center sm:gap-3"
-                >
-                  <span className="font-mono text-xs text-stone-400">{row.index}</span>
-                  <span className="min-w-0 font-medium leading-5 text-stone-800">{row.name}</span>
-                  <span className={row.deployed ? "col-span-2 inline-flex min-w-0 items-center gap-2 break-all text-blue-700 sm:col-span-1 sm:justify-self-end" : "col-span-2 inline-flex min-w-0 items-center gap-2 text-amber-700 sm:col-span-1 sm:justify-self-end"}>
-                    {row.deployed ? row.href.replace("https://", "") : "部署中 / 查看详情"}
-                    {row.deployed ? <ExternalLink className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <p className="text-[13.5px] leading-[1.9] text-mute">
+              看完如果觉得「我厂里也有这么个活」，那基本就对上话了。
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-7 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6">
-            <div className="flex items-center gap-2">
-              <Route className="h-5 w-5 text-amber-600" />
-              <h2 className="text-base font-semibold text-stone-950">推荐体验顺序</h2>
-            </div>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
-              如果只想快速了解整体能力，建议先从 MCP Agent 进入，再按工程能力逐步展开，而不是逐个随机打开。
-            </p>
-            <div className="mt-5 grid gap-3">
-              {recommendedJourney.map((item, index) => {
-                const demo = agentDemos.find((entry) => entry.slug === item.slug);
-                if (!demo) return null;
-
-                return (
-                  <Link
-                    key={item.slug}
-                    href={demo.liveUrl}
-                    target="_blank"
-                    className="grid grid-cols-[38px_minmax(0,1fr)] gap-3 rounded-lg border border-stone-200 bg-[#fffdf8] p-4 transition hover:border-amber-300 hover:bg-amber-50 sm:grid-cols-[46px_minmax(0,1fr)_auto] sm:items-center"
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-950 text-xs font-semibold text-white">
-                      {index + 1}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-stone-950">{item.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-stone-500">{item.focus}</span>
-                    </span>
-                    <span className="col-span-2 inline-flex min-w-0 items-center gap-2 break-all text-xs font-semibold text-blue-700 sm:col-span-1 sm:justify-self-end">
-                      {demo.liveUrl.replace("https://", "")}
-                      <ExternalLink className="h-4 w-4 shrink-0" />
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {trustNotes.map((note) => {
-              const Icon = note.icon;
-              return (
-                <div key={note.title} className="rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.04)]">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
-                    <Icon className="h-4 w-4 text-emerald-700" />
-                    {note.title}
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-stone-600">{note.body}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 pb-7 sm:px-6 sm:pb-8 lg:px-8">
-        <div className="mx-auto max-w-7xl border-y border-stone-200 py-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
             <div>
-              <div className="flex items-center gap-2">
-                <ServerCog className="h-5 w-5 text-blue-700" />
-                <h2 className="text-base font-semibold text-stone-950">AI 应用工程能力图谱</h2>
-              </div>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-                作品集不只证明“会调模型”，更强调知识库、工具调用、工作流、评测复盘和可交付结果。
-              </p>
+              <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">五个系统</p>
+              <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">按「最像你公司」的顺序排的</h2>
             </div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              5 个在线项目覆盖
-            </span>
+            <p className="text-[13px] text-mute">全部可在线打开</p>
           </div>
-          <div className="mt-5 grid overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-4">
-            {capabilityRows.map((row) => (
-              <Link key={row.capability} href={`/demos/${row.slug}`} className="min-w-0 bg-white p-4 transition hover:bg-amber-50">
-                <p className="text-sm font-semibold text-stone-950">{row.capability}</p>
-                <p className="mt-2 text-xs leading-5 text-stone-500">{row.evidence}</p>
-              </Link>
+
+          <ol className="border-t border-wline">
+            {agentDemos.map((demo) => (
+              <li key={demo.slug} className="border-b border-wline2">
+                <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 py-5 md:grid-cols-[38px_1fr_190px] md:gap-x-4">
+                  <span className="col-start-1 row-start-1 pt-0.5 font-mono text-[11px] tabular-nums text-mute md:text-[12px]">
+                    {demo.index}
+                  </span>
+
+                  <div className="col-start-2 row-start-1 min-w-0">
+                    <h3 className="text-[16px] font-semibold leading-[1.55] text-inkd">{demo.chineseName}</h3>
+                    <p className="mt-1.5 text-[13.5px] leading-[1.85] text-ink2">{demo.subtitle}</p>
+                    <p className="mt-2 text-[12.5px] leading-[1.75] text-mute">
+                      技术上：{demo.technicalHighlight}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <a
+                        href={demo.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="border-b border-[#DFC3B2] pb-0.5 text-[13px] font-semibold text-accent"
+                      >
+                        打开 {demo.liveUrl.replace("https://", "")} ↗
+                      </a>
+                      <Link
+                        href={`/demos/${demo.slug}`}
+                        className="text-[13px] font-medium text-mute underline-offset-4 hover:text-inkd hover:underline"
+                      >
+                        看它怎么做出来的
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="col-start-2 row-start-2 border-t border-wline2 pt-2 md:col-start-3 md:row-start-1 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+                    <p className="text-[11.5px] font-semibold tracking-[0.03em] text-mute">对应什么活</p>
+                    <p className="mt-1 text-[12.5px] leading-[1.75] text-ink2">{demo.businessScene}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-5 text-[13px] leading-[1.8] text-mute">
+            另外还做过一个企业内部数字化中台（飞书 + 内部系统），不对外演示 —— 那个是给公司内部用的。
+          </p>
+        </div>
+      </section>
+
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">先说清楚</p>
+          <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">看的时候留意这三件事</h2>
+          <div className="mt-5 grid border-t border-wline2 md:grid-cols-3">
+            {notes.map((note, index) => (
+              <div
+                key={note.title}
+                className={`py-4 md:pr-5 ${index === notes.length - 1 ? "" : "border-b border-wline2 md:border-b-0 md:border-r"}`}
+              >
+                <h3 className="text-[14.5px] font-semibold leading-[1.6] text-inkd">
+                  <span className="mr-1.5 font-mono text-[11px] text-mute">{String(index + 1).padStart(2, "0")}</span>
+                  {note.title}
+                </h3>
+                <p className="mt-1.5 text-[13px] leading-[1.85] text-ink2">{note.body}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-5 pb-7 sm:px-6 sm:pb-8 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 rounded-xl border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(41,37,36,0.05)] sm:p-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <section className="bg-deep px-5 py-10 md:py-12">
+        <div className="mx-auto flex max-w-site flex-wrap items-center justify-between gap-7">
           <div>
-            <div className="flex items-center gap-2">
-              <FlaskConical className="h-5 w-5 text-amber-600" />
-              <h2 className="text-base font-semibold text-stone-950">Agent 评测与迭代闭环</h2>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-stone-600">
-              这些项目都围绕“能运行、能评测、能复盘、能继续优化”组织，而不是只展示一次生成结果。
-            </p>
-            <div className="mt-5 grid gap-2">
-              {iterationSteps.map((step, index) => (
-                <div key={step} className="grid grid-cols-[34px_minmax(0,1fr)] items-center gap-3 rounded-lg border border-stone-200 bg-[#fffdf8] px-3 py-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-stone-950 text-xs font-semibold text-white">{index + 1}</span>
-                  <span className="text-sm font-semibold text-stone-800">{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid gap-3">
-            {iterationRows.map((row) => (
-              <Link key={row.project} href={`/demos/${row.slug}`} className="rounded-lg border border-stone-200 bg-[#fffdf8] p-4 transition hover:border-amber-300 hover:bg-amber-50">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-stone-950">{row.project}</p>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-stone-400" />
-                </div>
-                <p className="mt-2 text-xs leading-5 text-stone-500">{row.focus}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-7 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-[0_20px_70px_rgba(41,37,36,0.07)] lg:grid-cols-[310px_1fr]">
-          <aside className="border-b border-stone-200 bg-[#fffaf0] lg:border-b-0 lg:border-r">
-            <div className="border-b border-stone-200 px-6 py-5">
-              <h2 className="text-base font-semibold text-stone-950">案例索引</h2>
-              <p className="mt-1 text-xs leading-5 text-stone-500">按产品能力展开顺序组织，默认展示最贴合办公主站的项目。</p>
-            </div>
-            <div className="divide-y divide-stone-200/80">
-              {agentDemos.map((demo) => {
-                const active = demo.slug === selectedDemo.slug;
-                return (
-                  <Link
-                    key={demo.slug}
-                    href={`/demos/${demo.slug}`}
-                    className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 px-5 py-5 transition ${
-                      active ? "border-l-4 border-amber-600 bg-amber-50 text-amber-900" : "border-l-4 border-transparent hover:bg-white"
-                    }`}
-                  >
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${active ? "bg-amber-600 text-white" : "bg-white text-stone-700 ring-1 ring-stone-200"}`}>
-                      {demo.index}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold leading-5">{demo.name}</span>
-                      <span className="mt-1 block text-xs leading-5 text-stone-500">{demo.chineseName}</span>
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-stone-400" />
-                  </Link>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div>
-            <section className="grid gap-8 border-b border-stone-200 p-6 lg:grid-cols-[1fr_0.78fr] lg:p-9">
-              <div>
-                <p className="text-xs font-semibold text-amber-700">当前案例 {selectedDemo.index}</p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-normal text-stone-950 sm:text-4xl">{selectedDemo.name}</h2>
-                <p className="mt-3 text-base leading-7 text-stone-600">{selectedDemo.subtitle}</p>
-
-                <div className="mt-8 grid gap-6 md:grid-cols-2">
-                  <NarrativeBlock title="问题与挑战" items={selectedDemo.pains} />
-                  <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
-                      <Zap className="h-4 w-4 text-amber-600" />
-                      解决方案概述
-                    </div>
-                    <p className="mt-3 text-sm leading-7 text-stone-600">{selectedDemo.solution}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-stone-200 bg-[#fffdf8] p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold text-stone-950">
-                  <Link2 className="h-4 w-4 text-blue-700" />
-                  演示路径
-                </div>
-                {selectedDemo.deploymentStatus === "deployed" ? (
-                  <a
-                    href={selectedDemo.liveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 transition hover:bg-blue-100"
-                  >
-                    {selectedDemo.liveUrl}
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  <div className="mt-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                    <span>{selectedDemo.liveUrl}</span>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs">部署中</span>
-                  </div>
-                )}
-                <p className="mt-3 text-xs leading-5 text-stone-500">建议体验流程：上传样例数据、确认计划、观察 Agent 执行链路、下载报告。</p>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  {selectedDemo.metrics.map((metric) => (
-                    <div key={metric.label} className="rounded-lg border border-stone-200 bg-white px-3 py-3">
-                      <p className="text-xs text-stone-500">{metric.label}</p>
-                      <p className="mt-1 text-sm font-semibold text-stone-950">{metric.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section className="border-b border-stone-200 p-6 lg:p-9">
-              <h3 className="text-base font-semibold text-stone-950">工作流程</h3>
-              <div className="mt-5 grid gap-4 md:grid-cols-4">
-                {selectedDemo.workflow.slice(0, 4).map((step, index) => {
-                  const Icon = workflowIcons[index] ?? CheckCircle2;
-                  return (
-                    <div key={step} className="grid grid-cols-[48px_1fr] items-center gap-3 rounded-xl border border-stone-200 bg-white p-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-blue-700">步骤 {index + 1}</p>
-                        <p className="mt-1 text-sm font-semibold text-stone-900">{step}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="p-6 lg:p-9">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-amber-600" />
-                <h3 className="text-base font-semibold text-stone-950">项目横向对比</h3>
-              </div>
-              <div className="mt-5 overflow-x-auto rounded-xl border border-stone-200">
-                <table className="min-w-[920px] w-full border-collapse text-left text-sm">
-                  <thead className="bg-[#fffaf0] text-xs text-stone-500">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">项目名称</th>
-                      <th className="px-4 py-3 font-semibold">核心业务场景</th>
-                      <th className="px-4 py-3 font-semibold">技术亮点</th>
-                      <th className="px-4 py-3 font-semibold">演示就绪度</th>
-                      <th className="px-4 py-3 font-semibold">可访问地址</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100 bg-white">
-                    {agentDemos.map((demo) => (
-                      <tr key={demo.slug} className={demo.slug === selectedDemo.slug ? "bg-amber-50/70" : undefined}>
-                        <td className="px-4 py-3 font-semibold text-stone-900">{demo.name}</td>
-                        <td className="px-4 py-3 text-stone-600">{demo.businessScene}</td>
-                        <td className="px-4 py-3 text-stone-600">{demo.technicalHighlight}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            {demo.readiness}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {demo.deploymentStatus === "deployed" ? (
-                            <a href={demo.liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-semibold text-blue-700 hover:text-blue-900">
-                              {demo.liveUrl.replace("https://", "")}
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          ) : (
-                            <Link href={`/demos/${demo.slug}`} className="inline-flex items-center gap-2 font-semibold text-amber-700 hover:text-amber-900">
-                              部署中 / 查看详情
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 pb-12 sm:px-6 sm:pb-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-4 rounded-xl border border-stone-200 bg-stone-950 p-6 text-white md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-              <FlaskConical className="h-4 w-4" />
-              子域名部署建议
-            </div>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
-              五个项目可以继续独立部署，只要在阿里云 DNS 中添加对应 CNAME 或 A 记录，主站的作品集入口就能保持统一。
+            <h2 className="text-[22px] font-semibold leading-[1.5] text-paper md:text-[25px]">
+              你那边也有个每天重复干的活？
+            </h2>
+            <p className="mt-2 max-w-[440px] text-[13px] leading-[1.8] text-[#B7AE9B]">
+              说给我听就行。能做成上面这样我就报个价，做不了我直接说不做。
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-stone-200">
-            <CalendarClock className="h-4 w-4 text-amber-200" />
-            更新时间：2026-07-20
-          </div>
+          <Link
+            href="/contact"
+            className="hover-lift inline-flex h-12 items-center justify-center whitespace-nowrap rounded-[3px] bg-accent px-6 text-[15px] font-semibold text-white transition hover:bg-[#9C4525]"
+          >
+            说说你的情况 →
+          </Link>
         </div>
       </section>
-    </main>
-  );
-}
 
-function NarrativeBlock({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-stone-950">{title}</h3>
-      <ul className="mt-3 space-y-2 text-sm leading-6 text-stone-600">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      <SiteFooter />
     </div>
   );
 }

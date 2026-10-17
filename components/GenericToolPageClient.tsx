@@ -12,7 +12,6 @@ import {
   Mail,
   MessageCircle,
   RefreshCcw,
-  Sparkles,
   UploadCloud,
   X
 } from "lucide-react";
@@ -419,37 +418,42 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
-      <section className="border-b border-slate-200 bg-white px-5 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Link href="/tools" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-950">
-            <ArrowLeft className="h-4 w-4" />
-            返回工具箱
+    <main className="bg-paper text-inkd">
+      <section className="border-b border-wline px-5 pb-7 pt-7 md:pb-9 md:pt-9">
+        <div className="mx-auto max-w-site">
+          <Link href="/tools" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-mute transition hover:text-accent">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            返回工具列表
           </Link>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="mt-5 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                {freeRemaining === null ? tool.quotaText : `剩余免费次数：${freeRemaining}次`}
-              </div>
-              <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">{tool.name}</h1>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">{tool.intro}</p>
+              <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+                免费工具
+                {/* 剩余次数用文字，不用药丸标签 */}
+                <span className="ml-2 font-normal text-mute">
+                  {freeRemaining === null ? tool.quotaText : `今天还剩 ${freeRemaining} 次`}
+                </span>
+              </p>
+              <h1 className="mt-3 text-[25px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[31px]">
+                {tool.name}
+              </h1>
+              <p className="mt-3 max-w-[560px] text-[14.5px] leading-[1.95] text-ink2">{tool.intro}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-              <p className="text-xs font-semibold text-slate-400">支持格式</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{tool.formats}</p>
+            <div className="border-t border-wline2 pt-3 md:w-[190px] md:border-l md:border-t-0 md:pl-5 md:pt-0">
+              <p className="text-[11.5px] font-semibold tracking-[0.03em] text-mute">支持格式</p>
+              <p className="mt-1.5 text-[13.5px] font-semibold leading-[1.6] text-inkd">{tool.formats}</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+      <section className="mx-auto grid max-w-site gap-6 px-5 py-7 md:py-9 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
-          <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-slate-950">输入内容</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">填写必要信息后开始处理，结果会显示在右侧。</p>
+          <form onSubmit={handleSubmit} className="rounded-[5px] border border-wline bg-white p-5 sm:p-6">
+            <div className="mb-5">
+              <h2 className="text-[15px] font-semibold text-inkd">输入内容</h2>
+              <p className="mt-1.5 text-[12.5px] leading-[1.7] text-mute">填好必要信息就能开始，结果会出现在右边。</p>
             </div>
 
             <div className="space-y-5">
@@ -464,7 +468,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
               ) : null}
 
               {tool.kind === "hybrid" ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+                <div className="rounded-[4px] border border-wline bg-paper2 px-4 py-3 text-sm leading-6 text-ink2">
                   非合同文件会建议使用 PDF 总结工具。当前版本暂不支持扫描件 OCR，请上传可复制文字的文档。
                 </div>
               ) : null}
@@ -474,21 +478,21 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
               ))}
 
               {error ? (
-                <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+                <div className="flex gap-3 rounded-[4px] border border-[#E3C4B8] bg-[#FBF0EA] px-4 py-3 text-sm leading-6 text-[#9C3B22]">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="min-w-0 flex-1">
                     {error}
                     {error === "请先登录后使用" ? (
-                      <Link href="/login" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
+                      <Link href="/login" className="ml-2 font-semibold text-[#9C3B22] underline underline-offset-4">
                         去登录
                       </Link>
                     ) : null}
                     {isQuotaEmptyMessage(error) ? (
                       <>
-                        <Link href="/contact" className="ml-2 font-semibold text-red-800 underline underline-offset-4">
+                        <Link href="/contact" className="ml-2 font-semibold text-[#9C3B22] underline underline-offset-4">
                           联系定制
                         </Link>
-                        <a href={CONTACT_MAILTO} className="ml-2 font-semibold text-red-800 underline underline-offset-4">
+                        <a href={CONTACT_MAILTO} className="ml-2 font-semibold text-[#9C3B22] underline underline-offset-4">
                           发送邮件
                         </a>
                       </>
@@ -500,7 +504,7 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="hover-lift inline-flex h-12 w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-5 text-sm font-semibold text-white transition hover:bg-[#9C4525] disabled:cursor-not-allowed disabled:bg-[#C9BDA8]"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {isLoading ? "处理中..." : tool.submitLabel}
@@ -508,28 +512,28 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
             </div>
           </form>
 
-          <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mt-5 rounded-[5px] border border-wline bg-white p-5">
             <button
               type="button"
               onClick={() => setSampleOpen((current) => !current)}
-              className="flex w-full items-center justify-between gap-4 text-left text-sm font-semibold text-slate-950"
+              className="flex w-full items-center justify-between gap-4 text-left text-sm font-semibold text-inkd"
             >
               查看示例输出
-              <span className="text-slate-400">{sampleOpen ? "-" : "+"}</span>
+              <span className="text-mute">{sampleOpen ? "-" : "+"}</span>
             </button>
             {sampleOpen ? (
-              <div className="markdown-body mt-5 rounded-2xl bg-slate-50 p-4 text-sm">
+              <div className="markdown-body mt-5 rounded-[4px] bg-paper2 p-4 text-sm">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{tool.sample}</ReactMarkdown>
               </div>
             ) : null}
           </div>
         </div>
 
-        <section ref={resultRef} className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <section ref={resultRef} className="min-w-0 rounded-[5px] border border-wline bg-white p-5 sm:p-6">
+          <div className="flex flex-col gap-3 border-b border-wline pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-950">AI 生成结果</h2>
-              <p className="mt-1 text-sm text-slate-500">长文本结果会在当前区域内部滚动。</p>
+              <h2 className="text-[15px] font-semibold text-inkd">生成结果</h2>
+              <p className="mt-1 text-[12px] text-mute">文本长了就在这块里滚动，不会跑出页面。</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <ActionButton onClick={copyResult} disabled={!result} icon={Copy} label={copied ? "已复制" : "复制结果"} />
@@ -538,27 +542,27 @@ export default function GenericToolPageClient({ toolId }: { toolId: string }) {
             </div>
           </div>
 
-          <div className="mt-5 max-h-[680px] min-h-[460px] overflow-y-auto rounded-2xl bg-slate-50 p-5">
+          <div className="mt-5 max-h-[680px] min-h-[460px] overflow-y-auto rounded-[4px] bg-paper2 p-5">
             {isLoading ? (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                <h3 className="mt-5 text-lg font-semibold text-slate-950">正在处理</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">预计需要一些时间，请不要刷新页面。</p>
+                <Loader2 className="h-8 w-8 animate-spin text-accent" />
+                <h3 className="mt-5 text-lg font-semibold text-inkd">正在处理</h3>
+                <p className="mt-2 text-sm leading-6 text-mute">预计需要一些时间，请不要刷新页面。</p>
               </div>
             ) : null}
 
             {!isLoading && !result ? (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-white text-mute">
                   <Clipboard className="h-5 w-5" />
                 </div>
-                <p className="mt-4 text-sm font-medium text-slate-600">完成左侧输入后，AI 生成结果将在这里展示。</p>
-                <p className="mt-2 text-xs text-slate-400">{tool.emptyText}</p>
+                <p className="mt-4 text-sm font-medium text-ink2">完成左侧输入后，AI 生成结果将在这里展示。</p>
+                <p className="mt-2 text-xs text-mute">{tool.emptyText}</p>
               </div>
             ) : null}
 
             {result ? (
-              <div className="markdown-body text-sm leading-7 text-slate-800">
+              <div className="markdown-body text-sm leading-7 text-inkd">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown>
               </div>
             ) : null}
@@ -586,7 +590,7 @@ function FileUploadArea({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-800">上传文件</label>
+      <label className="mb-2 block text-sm font-semibold text-inkd">上传文件</label>
       <div
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
@@ -594,7 +598,7 @@ function FileUploadArea({
           const file = event.dataTransfer.files?.[0];
           if (file) onSelect(file);
         }}
-        className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 transition hover:border-blue-300 hover:bg-blue-50/40"
+        className="rounded-[4px] border border-dashed border-wline bg-paper2 p-5 transition hover:border-[#CFC5B1] hover:bg-paper2"
       >
         <input
           ref={fileInputRef}
@@ -609,17 +613,17 @@ function FileUploadArea({
 
         {selectedFile ? (
           <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] bg-white text-accent">
               <FileText className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-950">{selectedFile.name}</p>
-              <p className="mt-1 text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+              <p className="truncate text-sm font-semibold text-inkd">{selectedFile.name}</p>
+              <p className="mt-1 text-xs text-mute">{formatFileSize(selectedFile.size)}</p>
             </div>
             <button
               type="button"
               onClick={onRemove}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-950"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border border-wline bg-white text-mute transition hover:text-inkd"
               aria-label="删除文件"
             >
               <X className="h-4 w-4" />
@@ -631,13 +635,13 @@ function FileUploadArea({
             onClick={() => fileInputRef.current?.click()}
             className="flex w-full flex-col items-center justify-center py-3 text-center"
           >
-            <UploadCloud className="h-8 w-8 text-blue-600" />
-            <span className="mt-3 text-sm font-semibold text-slate-950">点击上传或拖拽文件到这里</span>
-            <span className="mt-2 text-xs leading-5 text-slate-500">{tool.uploadHint}</span>
+            <UploadCloud className="h-8 w-8 text-accent" />
+            <span className="mt-3 text-sm font-semibold text-inkd">点击上传或拖拽文件到这里</span>
+            <span className="mt-2 text-xs leading-5 text-mute">{tool.uploadHint}</span>
           </button>
         )}
       </div>
-      <p className="mt-2 text-xs leading-5 text-slate-500">
+      <p className="mt-2 text-xs leading-5 text-mute">
         {tool.formats} · {tool.sizeLimit || "建议 20MB 以内"}
       </p>
     </div>
@@ -660,14 +664,14 @@ function FieldRenderer({
   if (field.type === "select") {
     return (
       <div>
-        <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-slate-800">
+        <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-inkd">
           {field.label}
         </label>
         <select
           id={field.name}
           value={value}
           onChange={(event) => update(event.target.value)}
-          className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          className="h-12 w-full rounded-[3px] border border-wline bg-white px-4 text-sm font-medium text-inkd outline-none transition focus:border-accent"
         >
           {(field.options || []).map((option) => (
             <option key={option} value={option}>
@@ -682,7 +686,7 @@ function FieldRenderer({
   if (field.type === "textarea") {
     return (
       <div>
-        <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-slate-800">
+        <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-inkd">
           {field.label}
         </label>
         <textarea
@@ -691,7 +695,7 @@ function FieldRenderer({
           required={field.required}
           placeholder={field.placeholder}
           onChange={(event) => update(event.target.value)}
-          className="min-h-36 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          className="min-h-36 w-full resize-y rounded-[3px] border border-wline bg-white px-4 py-3 text-sm leading-7 text-inkd outline-none transition placeholder:text-mute focus:border-accent"
         />
       </div>
     );
@@ -699,12 +703,12 @@ function FieldRenderer({
 
   if (field.type === "checkbox") {
     return (
-      <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+      <label className="flex items-center gap-3 rounded-[4px] border border-wline bg-white px-4 py-3 text-sm font-semibold text-inkd">
         <input
           type="checkbox"
           checked={value === "true"}
           onChange={(event) => update(event.target.checked ? "true" : "false")}
-          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          className="h-4 w-4 rounded border-wline text-accent focus:ring-accent"
         />
         {field.label}
       </label>
@@ -713,7 +717,7 @@ function FieldRenderer({
 
   return (
     <div>
-      <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-slate-800">
+      <label htmlFor={field.name} className="mb-2 block text-sm font-semibold text-inkd">
         {field.label}
       </label>
       <input
@@ -724,7 +728,7 @@ function FieldRenderer({
         required={field.required}
         placeholder={field.placeholder}
         onChange={(event) => update(event.target.value)}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+        className="h-12 w-full rounded-[3px] border border-wline bg-white px-4 text-sm font-medium text-inkd outline-none transition placeholder:text-mute focus:border-accent"
       />
     </div>
   );
@@ -746,7 +750,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:opacity-80"
+      className="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[3px] border border-wline bg-white px-2.5 text-[12.5px] font-semibold text-ink2 transition hover:border-[#CFC5B1] hover:text-inkd disabled:cursor-not-allowed disabled:border-wline2 disabled:bg-paper2 disabled:text-mute"
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -764,36 +768,38 @@ function QuotaModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        <h2 className="mt-5 text-xl font-semibold text-slate-950">免费次数已用完</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-600">免费次数已用完，请购买套餐继续使用。也可以联系作者咨询定制服务。</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1B1A17]/45 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-[5px] bg-white p-6 shadow-[0_18px_50px_rgba(27,26,23,0.16)]">
+        <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+          免费次数
+        </p>
+        <h2 className="mt-3 text-[19px] font-semibold text-inkd">今天的免费次数用完了</h2>
+        <p className="mt-2.5 text-[13.5px] leading-[1.9] text-ink2">
+          想继续用有两个办法：买套餐（按次算，不自动续费），或者直接找我——如果你要处理的是每天重复的活，做成自动化更省事。
+        </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link href="/pricing" className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+          <Link href="/pricing" className="inline-flex h-11 items-center justify-center rounded-[3px] bg-inkd text-sm font-semibold text-paper">
             购买套餐
           </Link>
-          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+          <Link href="/contact" className="inline-flex h-11 items-center justify-center rounded-[3px] border border-wline text-sm font-semibold text-inkd">
             联系定制
           </Link>
-          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+          <a href={CONTACT_MAILTO} className="inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border border-wline text-sm font-semibold text-inkd">
             <Mail className="h-4 w-4" />
             发送邮件
           </a>
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-1">
-          <button type="button" onClick={copyDouyinId} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800">
+          <button type="button" onClick={copyDouyinId} className="inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border border-wline text-sm font-semibold text-inkd">
             <Copy className="h-4 w-4" />
             {copied ? "已复制" : "复制抖音号"}
           </button>
         </div>
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+        <div className="mt-4 flex items-start gap-3 rounded-[4px] border border-wline bg-paper2 px-4 py-3 text-sm leading-6 text-ink2">
           <MessageCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>请打开抖音搜索：<span className="font-semibold">{AUTHOR_DOUYIN_ID}</span></p>
         </div>
-        <button type="button" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-50">
+        <button type="button" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-[3px] text-sm font-semibold text-mute hover:bg-paper2">
           关闭
         </button>
       </div>

@@ -119,11 +119,11 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
 
   return (
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-      <form onSubmit={handleSubmit} className="rounded-xl border border-line bg-white p-5 shadow-sm sm:p-6">
+      <form onSubmit={handleSubmit} className="rounded-[3px] border border-wline bg-white p-5 shadow-[0_1px_0_rgba(227,220,206,0.8)] sm:p-6">
         <div className="space-y-5">
           {file ? (
             <div>
-              <label htmlFor={file.name} className="mb-2 block text-sm font-medium text-ink">
+              <label htmlFor={file.name} className="mb-2 block text-sm font-medium text-inkd">
                 {file.label}
               </label>
               <input
@@ -134,15 +134,15 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
                 accept={file.accept}
                 required={file.required}
                 onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
-                className="block w-full cursor-pointer rounded-lg border border-line bg-white text-sm text-muted file:mr-4 file:border-0 file:bg-ink file:px-4 file:py-3 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700"
+                className="block w-full cursor-pointer rounded-[3px] border border-wline bg-white text-sm text-mute file:mr-4 file:border-0 file:bg-inkd file:px-4 file:py-3 file:text-sm file:font-medium file:text-paper hover:file:bg-black"
               />
-              {selectedFile ? <p className="mt-2 text-sm text-muted">已选择：{selectedFile.name}</p> : null}
+              {selectedFile ? <p className="mt-2 text-sm text-mute">已选择：{selectedFile.name}</p> : null}
             </div>
           ) : null}
 
           {fields.map((field) => (
             <div key={field.name}>
-              <label htmlFor={field.name} className="mb-2 block text-sm font-medium text-ink">
+              <label htmlFor={field.name} className="mb-2 block text-sm font-medium text-inkd">
                 {field.label}
               </label>
               {isSelectField(field) ? (
@@ -152,7 +152,7 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
                   required={field.required}
                   value={values[field.name] || ""}
                   onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
-                  className="min-h-11 w-full rounded-lg border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-brand focus:ring-4 focus:ring-blue-50"
+                  className="min-h-11 w-full rounded-[3px] border border-wline bg-white px-3 text-sm text-inkd outline-none transition focus:border-accent"
                 >
                   {field.options.map((option) => (
                     <option key={option} value={option}>
@@ -168,7 +168,7 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
                   placeholder={field.placeholder}
                   value={values[field.name] || ""}
                   onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
-                  className="min-h-40 w-full resize-y rounded-lg border border-line bg-white px-4 py-3 text-sm leading-7 text-ink outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-4 focus:ring-blue-50"
+                  className="min-h-40 w-full resize-y rounded-[3px] border border-wline bg-white px-4 py-3 text-sm leading-7 text-inkd outline-none transition placeholder:text-mute focus:border-accent"
                 />
               ) : (
                 <input
@@ -180,14 +180,14 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
                   placeholder={field.placeholder}
                   value={values[field.name] || ""}
                   onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
-                  className="min-h-11 w-full rounded-lg border border-line bg-white px-4 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-4 focus:ring-blue-50"
+                  className="min-h-11 w-full rounded-[3px] border border-wline bg-white px-4 text-sm text-inkd outline-none transition placeholder:text-mute focus:border-accent"
                 />
               )}
             </div>
           ))}
 
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+            <div className="rounded-[3px] border border-[#E3C4B8] bg-[#FBF0EA] px-4 py-3 text-sm leading-6 text-[#9C3B22]">
               {error}
             </div>
           ) : null}
@@ -195,31 +195,31 @@ export default function ToolClient({ endpoint, submitLabel, file, fields = [] }:
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-brand px-5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-[3px] bg-inkd px-5 text-sm font-medium text-paper transition hover:bg-black disabled:cursor-not-allowed disabled:bg-[#C9BDA8]"
           >
             {isLoading ? "生成中..." : submitLabel}
           </button>
         </div>
       </form>
 
-      <section ref={resultRef} className="rounded-xl border border-line bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
-          <h2 className="text-lg font-semibold text-ink">AI 输出结果</h2>
+      <section ref={resultRef} className="rounded-[3px] border border-wline bg-white p-5 shadow-[0_1px_0_rgba(227,220,206,0.8)] sm:p-6">
+        <div className="flex items-center justify-between gap-3 border-b border-wline pb-4">
+          <h2 className="text-lg font-semibold text-inkd">AI 输出结果</h2>
           <button
             type="button"
             onClick={copyResult}
             disabled={!result}
-            className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line bg-white px-3 text-sm font-medium text-ink transition hover:bg-soft disabled:cursor-not-allowed disabled:text-slate-300"
+            className="inline-flex min-h-9 items-center justify-center rounded-[3px] border border-wline bg-white px-3 text-sm font-medium text-inkd transition hover:bg-paper2 disabled:cursor-not-allowed disabled:text-mute"
           >
             {copied ? "已复制" : "复制结果"}
           </button>
         </div>
 
         <div className="mt-5 min-h-80">
-          {isLoading ? <p className="text-sm text-muted">AI 正在处理，请稍候。</p> : null}
-          {!isLoading && !result ? <p className="text-sm text-muted">生成结果会显示在这里。</p> : null}
+          {isLoading ? <p className="text-sm text-mute">AI 正在处理，请稍候。</p> : null}
+          {!isLoading && !result ? <p className="text-sm text-mute">生成结果会显示在这里。</p> : null}
           {result ? (
-            <div className="markdown-body text-sm leading-7 text-ink">
+            <div className="markdown-body text-sm leading-7 text-inkd">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown>
             </div>
           ) : null}

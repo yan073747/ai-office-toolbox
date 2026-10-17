@@ -1,5 +1,5 @@
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
-import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
@@ -112,34 +112,34 @@ const footerColumns = [
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <div className="bg-paper text-inkd">
       <SiteHeader />
 
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <section className="border-b border-wline px-5 pb-7 pt-9 md:pb-9 md:pt-11">
         <div className="mx-auto max-w-[800px]">
-          <p className="text-sm font-semibold text-blue-600">AI WorkBox</p>
-          <h1 className="mt-4 text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">服务条款</h1>
-          <p className="mt-5 text-sm leading-7 text-slate-500">最后更新日期：2026-06-03</p>
-          <p className="mt-6 text-base leading-8 text-slate-600">
+          <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">AI WorkBox</p>
+          <h1 className="mt-3.5 max-w-[600px] text-[26px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[34px]">服务条款</h1>
+          <p className="mt-3 text-[12.5px] text-mute">最后更新日期：2026-06-03</p>
+          <p className="mt-3.5 max-w-[640px] text-[14.5px] leading-[1.95] text-ink2">
             欢迎使用 AI WorkBox。使用本网站及相关 AI 办公工具前，请阅读并理解以下服务条款。
           </p>
         </div>
       </section>
 
-      <section className="px-5 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto max-w-[800px] space-y-9">
+      <section className="px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-[760px] space-y-7">
           {sections.map((section, index) => (
-            <section key={section.title} className="border-b border-slate-200 pb-8 last:border-b-0 last:pb-0">
-              <h2 className="text-xl font-semibold tracking-normal text-slate-950">
+            <section key={section.title} className="border-b border-wline2 pb-6 last:border-b-0 last:pb-0">
+              <h2 className="text-[16px] font-semibold tracking-[-0.005em] text-inkd">
                 {index + 1}. {section.title}
               </h2>
-              <div className="mt-4 space-y-4">
+              <div className="mt-2.5 space-y-3">
                 {section.content.map((paragraph) => (
-                  <p key={paragraph} className="text-base leading-8 text-slate-600">
+                  <p key={paragraph} className="text-[14px] leading-[1.95] text-ink2">
                     {paragraph === "联系入口：/contact。" ? (
                       <>
                         联系入口：
-                        <Link href="/contact" className="font-semibold text-blue-700 transition hover:text-blue-900">
+                        <Link href="/contact" className="font-semibold text-accent transition hover:text-inkd">
                           /contact
                         </Link>
                         。
@@ -155,44 +155,7 @@ export default function TermsPage() {
         </div>
       </section>
 
-      <LegalFooter />
-    </main>
-  );
-}
-
-function LegalFooter() {
-  return (
-    <footer className="bg-white px-5 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-10 border-b border-slate-200 pb-10 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="font-semibold text-slate-950">AI WorkBox</span>
-          </div>
-          <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
-            Office AI Toolbox，面向个人、小团队、个体户和中小企业的 AI 办公效率工具网站。
-          </p>
-        </div>
-
-        {footerColumns.map((column) => (
-          <div key={column.title}>
-            <h3 className="text-sm font-semibold text-slate-950">{column.title}</h3>
-            <div className="mt-4 flex flex-col gap-3">
-              {column.links.map((link) => (
-                <Link key={link.label} href={link.href} className="text-sm text-slate-600 transition hover:text-slate-950">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 AI WorkBox. All rights reserved.</p>
-        <p>Office AI Toolbox</p>
-      </div>
-    </footer>
+      <SiteFooter />
+    </div>
   );
 }

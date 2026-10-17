@@ -1,4 +1,5 @@
 import GenericToolPageClient from "@/components/GenericToolPageClient";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { notFound } from "next/navigation";
 
@@ -53,9 +54,10 @@ export default async function ToolPage({ params }: ToolPageProps) {
   }
 
   return (
-    <>
+    <div className="bg-paper text-inkd">
       <SiteHeader />
       <GenericToolPageClient toolId={toolId} />
-    </>
+      <SiteFooter />
+    </div>
   );
 }

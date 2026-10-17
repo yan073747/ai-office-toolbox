@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, HelpCircle, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -22,7 +21,7 @@ const plans: Plan[] = [
     name: "体验套餐",
     price: "9.9 元",
     count: "20 次",
-    description: "适合偶尔处理文件和临时办公任务。",
+    description: "偶尔处理文件和临时办公任务。",
     features: ["20 次工具调用", "支持全部 7 个工具", "支持历史记录", "30 天有效"]
   },
   {
@@ -30,7 +29,7 @@ const plans: Plan[] = [
     name: "标准套餐",
     price: "19.9 元",
     count: "50 次",
-    description: "适合稳定使用 AI 办公工具的个人或小团队。",
+    description: "稳定使用的个人或小团队。",
     features: ["50 次工具调用", "支持全部 7 个工具", "支持个人中心统计", "30 天有效"],
     featured: true
   },
@@ -39,27 +38,27 @@ const plans: Plan[] = [
     name: "高级套餐",
     price: "49.9 元",
     count: "150 次",
-    description: "适合高频使用和连续处理办公任务。",
+    description: "高频使用、连续处理文档。",
     features: ["150 次工具调用", "支持全部 7 个工具", "适合高频文档处理", "30 天有效"]
   }
 ];
 
 const faqs = [
   {
-    question: "免费次数怎么计算？",
-    answer: "新用户每个工具默认赠送 1 次免费体验。某个工具的免费次数用完后，需要购买套餐继续使用。"
+    question: "免费次数怎么算？",
+    answer: "每个工具新用户默认送 1 次。某个工具的免费次数用完后，需要买套餐才能继续用。"
   },
   {
-    question: "套餐次数是否跨工具通用？",
-    answer: "是。购买套餐后，套餐次数在全部 7 个工具之间通用，每次成功调用消耗 1 次。"
+    question: "次数是所有工具通用的吗？",
+    answer: "是。套餐次数在全部 7 个工具之间通用，每成功调用一次扣 1 次。"
   },
   {
-    question: "现在是否是自动支付？",
-    answer: "当前是人工支付确认流程：创建订单后扫码付款，提交付款信息，管理员确认收款后自动开通套餐。"
+    question: "是自动扣款吗？",
+    answer: "不是。现在是人工确认：下单后扫码付款，把付款信息提交上来，我确认到账就给你开通。不自动续费，也不会重复扣。"
   },
   {
-    question: "可以做企业定制吗？",
-    answer: "可以。你可以通过联系定制页面提交需求，表单会同步到飞书需求表并保存到数据库。"
+    question: "能做企业定制吗？",
+    answer: "能，而且这通常比买套餐划算——如果你每天都有活要处理，做成自动化比按次买便宜得多。走联系页说需求就行。"
   }
 ];
 
@@ -79,7 +78,7 @@ export default function PricingPageClient() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data?.ok === false) {
-        setOrderMessage(typeof data?.message === "string" ? data.message : "订单创建失败，请稍后重试。");
+        setOrderMessage(typeof data?.message === "string" ? data.message : "订单没建成，稍后再试一次。");
         return;
       }
       router.push(data.paymentUrl || `/payment/${data.order.id}`);
@@ -89,83 +88,106 @@ export default function PricingPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-            <Sparkles className="h-4 w-4 text-blue-600" />
-            首次免费，套餐按次购买
+    <main className="bg-paper text-inkd">
+      <section className="border-b border-wline px-5 pb-7 pt-9 md:pb-9 md:pt-11">
+        <div className="mx-auto max-w-site">
+          <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+            工具套餐
+          </p>
+          <h1 className="mt-3.5 max-w-[600px] text-[26px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[34px]">
+            几块钱一次的事，按次买就行
+          </h1>
+          <div className="mt-4 grid max-w-[660px] gap-2.5 text-[15px] leading-[1.95] text-ink2">
+            <p>每个工具新用户先送 1 次，用完了再决定要不要买。不自动续费，不绑卡，不会每个月悄悄扣钱。</p>
+            <p className="text-[13.5px] leading-[1.9] text-mute">
+              如果你每天都有同样的活要处理，别买套餐 —— 直接找我做成自动化更便宜。
+            </p>
           </div>
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-6xl">AI 办公工具箱套餐</h1>
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-            新用户每个工具可免费体验 1 次。免费次数用完后，可购买套餐继续使用。当前采用人工支付确认，付款后管理员确认即可开通。
+        </div>
+      </section>
+
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <div className="grid border-t border-wline md:grid-cols-3">
+            {plans.map((plan, index) => (
+              <article
+                key={plan.id}
+                className={`flex flex-col py-5 md:py-6 ${
+                  index === plans.length - 1 ? "" : "border-b border-wline2 md:border-b-0 md:border-r"
+                } ${index === 0 ? "md:pr-5" : "md:px-5"} ${index === plans.length - 1 ? "md:pl-5 md:pr-0" : ""}`}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className="text-[15px] font-semibold text-inkd">{plan.name}</h2>
+                  {plan.featured ? (
+                    <span className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">多数人买这个</span>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-[28px] font-semibold leading-none tabular-nums text-inkd">
+                  {plan.price}
+                  <span className="ml-1.5 text-[12.5px] font-normal text-mute">/ {plan.count}</span>
+                </p>
+                <p className="mt-2 text-[12.5px] leading-[1.75] text-mute">{plan.description}</p>
+
+                <ul className="mt-4 border-t border-wline2 pt-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex gap-2 py-1 text-[12.5px] leading-[1.8] text-ink2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-auto pt-5">
+                  <button
+                    type="button"
+                    onClick={() => createOrder(plan)}
+                    disabled={loadingPlan === plan.id}
+                    className={`inline-flex h-11 w-full items-center justify-center rounded-[3px] text-[14px] font-semibold transition disabled:cursor-not-allowed disabled:bg-paper2 disabled:text-mute ${
+                      plan.featured
+                        ? "bg-accent text-white hover:bg-[#9C4525]"
+                        : "border border-inkd text-inkd hover:bg-inkd hover:text-paper"
+                    }`}
+                  >
+                    {loadingPlan === plan.id ? "正在建单…" : "买这个"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {orderMessage ? (
+            <div className="mt-5 border-l-2 border-[#9C3B22] bg-[#FBF0EA] px-4 py-3 text-[13px] leading-[1.8] text-[#9C3B22]">
+              {orderMessage}
+            </div>
+          ) : null}
+
+          <p className="mt-6 text-[13px] leading-[1.8] text-mute">
+            三个套餐都是 30 天有效，次数在 7 个工具之间通用。没有「不限次数」这种套餐 —— 那玩意儿最后一定限速。
           </p>
         </div>
       </section>
 
-      <section className="px-5 py-14 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
-          {plans.map((plan) => (
-            <article
-              key={plan.id}
-              className={
-                plan.featured
-                  ? "relative rounded-3xl border border-slate-950 bg-slate-950 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,0.2)]"
-                  : "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]"
-              }
-            >
-              {plan.featured ? <span className="absolute right-5 top-5 rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">推荐</span> : null}
-              <h2 className={plan.featured ? "text-xl font-semibold text-white" : "text-xl font-semibold text-slate-950"}>{plan.name}</h2>
-              <p className={plan.featured ? "mt-3 text-sm leading-6 text-slate-300" : "mt-3 text-sm leading-6 text-slate-500"}>{plan.description}</p>
-              <p className={plan.featured ? "mt-6 text-4xl font-semibold text-white" : "mt-6 text-4xl font-semibold text-slate-950"}>{plan.price}</p>
-              <p className={plan.featured ? "mt-2 text-sm font-semibold text-blue-200" : "mt-2 text-sm font-semibold text-blue-700"}>{plan.count}</p>
-              <div className="mt-6 space-y-3">
-                {plan.features.map((feature) => (
-                  <div key={feature} className={plan.featured ? "flex gap-3 text-sm text-slate-200" : "flex gap-3 text-sm text-slate-700"}>
-                    <CheckCircle2 className={plan.featured ? "mt-0.5 h-4 w-4 shrink-0 text-blue-300" : "mt-0.5 h-4 w-4 shrink-0 text-blue-600"} />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => createOrder(plan)}
-                disabled={loadingPlan === plan.id}
-                className={
-                  plan.featured
-                    ? "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
-                    : "mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
-                }
-              >
-                {loadingPlan === plan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                购买套餐
-              </button>
-            </article>
-          ))}
-        </div>
-        {orderMessage ? <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm leading-6 text-red-700">{orderMessage}</div> : null}
-      </section>
-
-      <section className="border-y border-slate-200 bg-slate-50 px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <SectionHeader title="套餐对比" description="三个套餐均为 30 天有效，不设不限次数套餐。次数在全部工具之间通用。" />
-          <div className="mt-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">对比</p>
+          <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">三个套餐差在哪</h2>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[560px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
-                  <th className="px-5 py-4 font-semibold">套餐</th>
-                  <th className="px-5 py-4 font-semibold">价格</th>
-                  <th className="px-5 py-4 font-semibold">次数</th>
-                  <th className="px-5 py-4 font-semibold">适合人群</th>
+                <tr className="border-y border-wline text-[11.5px] text-mute">
+                  <th className="py-2.5 pr-4 font-semibold">套餐</th>
+                  <th className="py-2.5 pr-4 font-semibold">价格</th>
+                  <th className="py-2.5 pr-4 font-semibold">次数</th>
+                  <th className="py-2.5 font-semibold">适合</th>
                 </tr>
               </thead>
               <tbody>
                 {plans.map((plan) => (
-                  <tr key={plan.id} className="border-b border-slate-100 last:border-b-0">
-                    <td className="px-5 py-4 font-semibold">{plan.name}</td>
-                    <td className="px-5 py-4">{plan.price}</td>
-                    <td className="px-5 py-4">{plan.count}</td>
-                    <td className="px-5 py-4">{plan.description}</td>
+                  <tr key={plan.id} className="border-b border-wline2 text-[13px]">
+                    <td className="py-3 pr-4 font-semibold text-inkd">{plan.name}</td>
+                    <td className="py-3 pr-4 tabular-nums text-inkd">{plan.price}</td>
+                    <td className="py-3 pr-4 tabular-nums text-ink2">{plan.count}</td>
+                    <td className="py-3 text-ink2">{plan.description}</td>
                   </tr>
                 ))}
               </tbody>
@@ -174,55 +196,45 @@ export default function PricingPageClient() {
         </div>
       </section>
 
-      <section className="px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <SectionHeader title="常见问题" />
-          <div className="mt-10 divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-white px-6 shadow-sm">
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">常见问题</p>
+          <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">买之前大概会问的</h2>
+          <div className="mt-4 border-t border-wline2">
             {faqs.map((faq) => (
-              <details key={faq.question} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-slate-950">
-                  <span className="flex items-center gap-3">
-                    <HelpCircle className="h-5 w-5 text-blue-600" />
-                    {faq.question}
-                  </span>
-                  <span className="text-slate-400 transition group-open:rotate-45">+</span>
+              <details key={faq.question} className="group border-b border-wline2 py-3.5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[14px] font-semibold text-inkd">
+                  {faq.question}
+                  <span className="text-mute transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p>
+                <p className="mt-2 max-w-[640px] text-[13px] leading-[1.9] text-ink2">{faq.answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-5 pb-16 sm:px-6 sm:pb-20 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200 bg-slate-950 p-8 text-white shadow-[0_28px_90px_rgba(15,23,42,0.18)] sm:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-normal sm:text-4xl">不确定选哪个套餐？</h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">可以先免费体验，也可以告诉我你的使用频率和业务场景，我会推荐更合适的方案。</p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/contact" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-blue-50">
-                联系定制
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <SmartEntryLink className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10">
-                先免费体验
-                <ArrowRight className="h-4 w-4" />
-              </SmartEntryLink>
-            </div>
+      <section className="bg-deep px-5 py-10 md:py-12">
+        <div className="mx-auto flex max-w-site flex-wrap items-center justify-between gap-7">
+          <div>
+            <h2 className="text-[22px] font-semibold leading-[1.5] text-paper md:text-[25px]">拿不定主意就别买</h2>
+            <p className="mt-2 max-w-[440px] text-[13px] leading-[1.8] text-[#B7AE9B]">
+              先用免费的试。真不够用，再来跟我说你每天要处理多少份。
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <SmartEntryLink className="hover-lift inline-flex h-12 items-center justify-center whitespace-nowrap rounded-[3px] bg-accent px-6 text-[15px] font-semibold text-white transition hover:bg-[#9C4525]">
+              先免费试用 →
+            </SmartEntryLink>
+            <Link
+              href="/contact"
+              className="hover-lift inline-flex h-12 items-center justify-center whitespace-nowrap rounded-[3px] border border-white/25 px-5 text-[14px] font-semibold text-paper transition hover:bg-white/10"
+            >
+              聊聊定制
+            </Link>
           </div>
         </div>
       </section>
     </main>
-  );
-}
-
-function SectionHeader({ title, description }: { title: string; description?: string }) {
-  return (
-    <div className="mx-auto max-w-3xl text-center">
-      <h2 className="text-2xl font-semibold tracking-normal text-slate-950 sm:text-4xl">{title}</h2>
-      {description ? <p className="mt-4 text-base leading-8 text-slate-600">{description}</p> : null}
-    </div>
   );
 }

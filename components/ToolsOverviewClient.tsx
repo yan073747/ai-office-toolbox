@@ -3,15 +3,13 @@
 import {
   ArrowRight,
   BarChart3,
-  Boxes,
   ClipboardList,
   FileCheck2,
   FileText,
   MailCheck,
   MessageSquareText,
   Presentation,
-  Search,
-  Sparkles
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -117,22 +115,24 @@ export default function ToolsOverviewClient() {
   }, [activeCategory, keyword]);
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <section className="border-b border-slate-200 bg-[linear-gradient(180deg,#F8FAFC_0%,#FFFFFF_100%)] px-5 py-14 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-              <Sparkles className="h-4 w-4 text-blue-600" />
-              Office AI Toolbox
-            </div>
-            <h1 className="mt-6 text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">AI 办公工具箱</h1>
-            <p className="mt-5 text-lg leading-8 text-slate-600">
-              选择一个工具，上传文件或输入内容，即可获得 AI 生成的结构化结果。
+    <main className="bg-paper text-inkd">
+      <section className="border-b border-wline px-5 pb-7 pt-9 md:pb-9 md:pt-11">
+        <div className="mx-auto max-w-site">
+          <p className="inline-block border-b border-[#E0C4B4] pb-0.5 text-[12.5px] font-semibold tracking-[0.04em] text-accent">
+            免费工具
+          </p>
+          <h1 className="mt-3.5 max-w-[560px] text-[26px] font-semibold leading-[1.42] tracking-[-0.012em] text-inkd md:text-[34px]">
+            七个不花钱的小工具，现在就能用
+          </h1>
+          <div className="mt-4 grid max-w-[660px] gap-2.5 text-[15px] leading-[1.95] text-ink2">
+            <p>不用注册，不用留手机号，打开就能跑。做这些是因为我自己每天也要用。</p>
+            <p className="text-[13.5px] leading-[1.9] text-mute">
+              结果仅供参考，重要文件（合同、财务、对外通知）请自己再核一遍。
             </p>
           </div>
 
-          <div className="mt-9 grid gap-4 lg:grid-cols-[1fr_360px] lg:items-center">
-            <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="mt-7 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
               {categories.map((category) => {
                 const count = category === "全部" ? tools.length : tools.filter((tool) => tool.category === category).length;
                 const active = activeCategory === category;
@@ -145,84 +145,82 @@ export default function ToolsOverviewClient() {
                     onClick={() => setActiveCategory(category)}
                     className={
                       active
-                        ? "h-11 shrink-0 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm"
-                        : "h-11 shrink-0 rounded-xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+                        ? "h-9 rounded-[3px] border border-inkd bg-inkd px-3 text-[13px] font-semibold text-paper transition"
+                        : "h-9 rounded-[3px] border border-transparent px-3 text-[13px] font-medium text-ink2 transition hover:border-wline hover:bg-paper2 hover:text-inkd"
                     }
                   >
                     {category}
-                    <span className={active ? "ml-2 text-white/70" : "ml-2 text-slate-400"}>{count}</span>
+                    <span className={active ? "ml-1.5 text-paper/60" : "ml-1.5 text-mute"}>{count}</span>
                   </button>
                 );
               })}
             </div>
 
-            <label className="relative block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <label className="relative block w-full md:w-[260px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" />
               <input
                 aria-label="搜索工具名称"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="搜索工具名称"
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                placeholder="搜一下，比如「合同」"
+                className="h-10 w-full rounded-[3px] border border-wline bg-white pl-9 pr-3 text-[13.5px] font-medium text-inkd outline-none transition placeholder:text-mute focus:border-accent"
               />
             </label>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-12 sm:px-6 sm:py-14 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <section className="border-b border-wline px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
             <div>
-              <p className="text-sm font-semibold text-blue-600">工具列表</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">选择你要处理的办公任务</h2>
+              <p className="text-[11.5px] font-semibold tracking-[0.03em] text-accent">工具列表</p>
+              <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.005em] text-inkd">挑一个现在要处理的活</h2>
             </div>
-            <p className="text-sm text-slate-500">当前显示 {filteredTools.length} 个工具</p>
+            <p className="text-[13px] text-mute">共 {filteredTools.length} 个</p>
           </div>
 
           {filteredTools.length ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredTools.map((tool) => (
-                <ToolCard key={tool.title} tool={tool} />
+            <ol className="border-t border-wline">
+              {filteredTools.map((tool, index) => (
+                <ToolRow key={tool.id} tool={tool} index={index} />
               ))}
-            </div>
+            </ol>
           ) : (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center">
-              <p className="text-lg font-semibold text-slate-950">没有找到匹配工具</p>
-              <p className="mt-2 text-sm text-slate-500">可以换一个关键词，或切换到“全部”分类查看。</p>
+            <div className="border-y border-wline px-2 py-14 text-center">
+              <p className="text-[15px] font-semibold text-inkd">没有叫这个的工具</p>
+              <p className="mt-2 text-[13px] text-mute">
+                换个词试试，或者点上面「全部」把七个都看一遍。
+              </p>
             </div>
           )}
+
+          <p className="mt-6 text-[13.5px] leading-[1.9] text-ink2">
+            想要的是「能接我自己数据、带权限、出错有人管」的版本，而不是这种单次工具 ——{" "}
+            <Link href="/contact" className="border-b border-[#DFC3B2] pb-0.5 font-semibold text-accent">
+              跟我说说你在做什么
+            </Link>
+            。
+          </p>
         </div>
       </section>
 
-      <section className="px-5 pb-16 sm:px-6 sm:pb-20 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200 bg-slate-950 p-8 text-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] sm:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+      <section className="px-5 py-8 md:py-10">
+        <div className="mx-auto max-w-site border-t-2 border-inkd pt-4">
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
             <div>
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
-                <Boxes className="h-5 w-5" />
-              </div>
-              <h2 className="text-2xl font-semibold tracking-normal sm:text-3xl">继续查看完整的 Agent 工程</h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                从单点工具继续深入 RAG、Prompt 评测、多 Agent 编排与 MCP 工具调用的完整项目实践。
+              <h2 className="text-[19px] font-semibold leading-[1.5] text-inkd">这些工具背后的东西，也能看</h2>
+              <p className="mt-2 max-w-[520px] text-[13.5px] leading-[1.85] text-ink2">
+                每个都还开着，可以直接点进去用。看演示比看介绍有用。
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/demos"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-50"
-              >
-                查看 Agent 作品
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/about"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
-              >
-                了解工程能力
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+            <Link
+              href="/demos"
+              className="hover-lift inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[3px] border border-inkd px-5 text-[14px] font-semibold text-inkd transition hover:bg-inkd hover:text-paper"
+            >
+              看六个上线系统
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -230,44 +228,41 @@ export default function ToolsOverviewClient() {
   );
 }
 
-function ToolCard({ tool }: { tool: ToolItem }) {
+function ToolRow({ tool, index }: { tool: ToolItem; index: number }) {
   const Icon = tool.icon;
 
   return (
-    <article className="group flex min-h-[320px] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-950 transition group-hover:bg-blue-50 group-hover:text-blue-700">
-          <Icon className="h-5 w-5" />
-        </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
-          {tool.category}
-        </span>
-      </div>
-
-      <h3 className="mt-5 text-xl font-semibold tracking-normal text-slate-950">{tool.title}</h3>
-      <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{tool.description}</p>
-
-      <div className="mt-6 space-y-3 rounded-2xl bg-slate-50 p-4">
-        <InfoLine label="输入类型" value={tool.input} />
-        <InfoLine label="适合人群" value={tool.audience} />
-      </div>
-
+    <li className="border-b border-wline2">
       <Link
         href={`/tools/${tool.id}`}
-        className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
+        className="group grid grid-cols-[auto_1fr] items-start gap-x-3 gap-y-1.5 py-4 md:grid-cols-[38px_1fr_150px_86px] md:items-center md:gap-x-4"
       >
-        立即使用
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-    </article>
-  );
-}
+        <span className="col-start-1 row-start-1 font-mono text-[11px] tabular-nums text-mute md:text-[12px]">
+          {String(index + 1).padStart(2, "0")}
+        </span>
 
-function InfoLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid gap-1 text-sm">
-      <span className="text-xs font-semibold text-slate-400">{label}</span>
-      <span className="font-medium leading-6 text-slate-700">{value}</span>
-    </div>
+        <div className="col-start-2 row-start-1 min-w-0">
+          <h3 className="flex items-center gap-2 text-[15px] font-semibold leading-[1.6] text-inkd">
+            <Icon className="h-3.5 w-3.5 shrink-0 text-mute transition group-hover:text-accent" />
+            <span className="border-b border-transparent pb-0.5 transition group-hover:border-[#DFC3B2]">
+              {tool.title}
+            </span>
+          </h3>
+          <p className="mt-1 text-[13px] leading-[1.8] text-ink2">{tool.description}</p>
+          <p className="mt-1 text-[12px] leading-[1.7] text-mute md:hidden">
+            吃 {tool.input} · 适合 {tool.audience}
+          </p>
+        </div>
+
+        <p className="col-start-2 row-start-2 hidden text-[12.5px] text-mute md:col-start-3 md:row-start-1 md:block md:text-right">
+          {tool.input}
+        </p>
+
+        <span className="col-start-2 row-start-3 inline-flex items-center gap-1 text-[13px] font-semibold text-accent md:col-start-4 md:row-start-1 md:justify-end">
+          打开
+          <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+        </span>
+      </Link>
+    </li>
   );
 }
